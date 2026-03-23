@@ -1,18 +1,28 @@
-"""Страница CheckBox — работа с деревом чекбоксов."""
+"""Страница CheckBox — работа с деревом чекбоксов (rc-tree)."""
 
 from typing import List
 
 from playwright.sync_api import Locator, Page
 
+from config.settings import Settings
 from pages.base_page import BasePage
 
 
 class CheckBoxPage(BasePage):
-    """Page Object для страницы https://demoqa.com/checkbox."""
+    """Page Object для страницы https://demoqa.com/checkbox.
 
-    # --- Локаторы ---
-    EXPAND_ALL_BUTTON = "button[title='Expand all']"
-    COLLAPSE_ALL_BUTTON = "button[title='Collapse all']"
+    DemoQA использует rc-tree (Ant Design) для дерева чекбоксов.
+    Глобальных кнопок Expand All/Collapse All нет —
+    каждый узел имеет свой .rc-tree-switcher.
+    """
+
+    # --- Локаторы (rc-tree) ---
+    TREE = ".rc-tree"
+    TREE_NODE = ".rc-tree-treenode"
+    SWITCHER_CLOSED = ".rc-tree-switcher_close"
+    SWITCHER_OPEN = ".rc-tree-switcher_open"
+    CHECKBOX = ".rc-tree-checkbox"
+    NODE_TITLE = ".rc-tree-title"
     RESULT_CONTAINER = "#result"
     RESULT_ITEMS = "#result .text-success"
 
@@ -22,6 +32,9 @@ class CheckBoxPage(BasePage):
     def open(self) -> "CheckBoxPage":
         """Открыть страницу CheckBox."""
         super().open("/checkbox")
+        self.page.locator(self.TREE).wait_for(
+            state="visible", timeout=Settings.EXPECT_TIMEOUT,
+        )
         return self
 
     # --- Свойства ---
@@ -30,16 +43,6 @@ class CheckBoxPage(BasePage):
     def result_container(self) -> Locator:
         """Блок вывода результата."""
         return self.page.locator(self.RESULT_CONTAINER)
-
-    @property
-    def expand_all_button(self) -> Locator:
-        """Кнопка 'Развернуть всё'."""
-        return self.page.locator(self.EXPAND_ALL_BUTTON)
-
-    @property
-    def collapse_all_button(self) -> Locator:
-        """Кнопка 'Свернуть всё'."""
-        return self.page.locator(self.COLLAPSE_ALL_BUTTON)
 
     # --- Геттеры локаторов ---
 
@@ -53,8 +56,7 @@ class CheckBoxPage(BasePage):
             Локатор label-элемента.
         """
         return self.page.locator(
-            f".rct-node-leaf .rct-title:has-text('{item_name}'), "
-            f".rct-node-parent .rct-title:has-text('{item_name}')"
+            f".rc-tree-title:text-is('{item_name}')"
         ).first
 
     def get_toggle_icon(self, item_name: str) -> Locator:
@@ -67,20 +69,30 @@ class CheckBoxPage(BasePage):
             Локатор иконки toggle.
         """
         return self.page.locator(
-            f"//span[contains(@class, 'rct-title') and text()='{item_name}']"
-            f"/ancestor::li[1]//button[contains(@class, 'rct-collapse')]"
+            f".rc-tree-treenode:has(.rc-tree-title:text-is('{item_name}'))"
+            f" >> .rc-tree-switcher"
         )
 
     # --- Действия ---
 
     def expand_all(self) -> "CheckBoxPage":
-        """Развернуть все узлы дерева."""
-        self.click(self.expand_all_button)
+        """Развернуть все узлы дерева (кликая по каждому закрытому switcher)."""
+        while True:
+            closed = self.page.locator(self.SWITCHER_CLOSED)
+            if closed.count() == 0:
+                break
+            closed.first.click(force=True, timeout=Settings.ACTION_TIMEOUT)
+            self.page.wait_for_timeout(300)
         return self
 
     def collapse_all(self) -> "CheckBoxPage":
-        """Свернуть все узлы дерева."""
-        self.click(self.collapse_all_button)
+        """Свернуть все узлы дерева (кликая по каждому открытому switcher)."""
+        while True:
+            opened = self.page.locator(self.SWITCHER_OPEN)
+            if opened.count() == 0:
+                break
+            opened.first.click(force=True, timeout=Settings.ACTION_TIMEOUT)
+            self.page.wait_for_timeout(300)
         return self
 
     def toggle_item(self, item_name: str) -> "CheckBoxPage":
@@ -93,8 +105,8 @@ class CheckBoxPage(BasePage):
             Экземпляр CheckBoxPage для chaining.
         """
         toggle = self.get_toggle_icon(item_name)
-        if toggle.is_visible():
-            toggle.click()
+        if toggle.count() > 0:
+            toggle.click(force=True, timeout=Settings.ACTION_TIMEOUT)
         return self
 
     def check_item(self, item_name: str) -> "CheckBoxPage":
@@ -106,8 +118,11 @@ class CheckBoxPage(BasePage):
         Returns:
             Экземпляр CheckBoxPage для chaining.
         """
-        label = self.get_checkbox_label(item_name)
-        label.click()
+        checkbox = self.page.locator(
+            f".rc-tree-treenode:has(.rc-tree-title:text-is('{item_name}'))"
+            f" >> .rc-tree-checkbox"
+        )
+        checkbox.click(force=True, timeout=Settings.ACTION_TIMEOUT)
         return self
 
     # --- Валидация ---

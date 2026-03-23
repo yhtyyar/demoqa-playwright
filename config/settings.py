@@ -23,10 +23,10 @@ class Settings:
     REPORTS_DIR: Path = ROOT_DIR / "reports"
     SCREENSHOTS_DIR: Path = REPORTS_DIR / "screenshots"
 
-    # Таймауты
-    PAGE_LOAD_TIMEOUT: int = 30000
-    EXPECT_TIMEOUT: int = 10000
-    ACTION_TIMEOUT: int = 5000
+    # Таймауты (увеличены для Firefox/WebKit в CI)
+    PAGE_LOAD_TIMEOUT: int = 60000
+    EXPECT_TIMEOUT: int = 15000
+    ACTION_TIMEOUT: int = 10000
 
     # Данные для тестов
     TEST_USER: dict = {

@@ -23,9 +23,9 @@ class WebTablesPage(BasePage):
     INPUT_SALARY = "#salary"
     INPUT_DEPARTMENT = "#department"
 
-    # --- Локаторы: таблица ---
-    TABLE_ROWS = ".rt-tr-group"
-    TABLE_CELL = ".rt-td"
+    # --- Локаторы: таблица (стандартная HTML table) ---
+    TABLE_ROWS = "tbody tr"
+    TABLE_CELL = "td"
     EDIT_BUTTON = "[title='Edit']"
     DELETE_BUTTON = "[title='Delete']"
 
@@ -94,6 +94,7 @@ class WebTablesPage(BasePage):
     def submit_form(self) -> "WebTablesPage":
         """Нажать кнопку Submit в форме."""
         self.click(self.submit_button)
+        self.page.wait_for_timeout(1000)
         return self
 
     def search(self, query: str) -> "WebTablesPage":
@@ -106,6 +107,7 @@ class WebTablesPage(BasePage):
             Экземпляр WebTablesPage для chaining.
         """
         self.fill(self.search_box, query)
+        self.page.wait_for_timeout(500)
         return self
 
     def delete_row_by_index(self, index: int) -> "WebTablesPage":
@@ -117,7 +119,7 @@ class WebTablesPage(BasePage):
         Returns:
             Экземпляр WebTablesPage для chaining.
         """
-        delete_btn = self.page.locator(f"{self.TABLE_ROWS}:nth-child({index + 1}) {self.DELETE_BUTTON}")
+        delete_btn = self.page.locator(f"tbody tr:nth-child({index + 1}) {self.DELETE_BUTTON}")
         self.click(delete_btn)
         return self
 
@@ -129,22 +131,27 @@ class WebTablesPage(BasePage):
         Returns:
             Список словарей с данными строк.
         """
-        rows = self.page.locator(self.TABLE_ROWS).all()
-        data = []
-        for row in rows:
-            cells = row.locator(self.TABLE_CELL).all()
-            if len(cells) >= 6:
-                first_name = cells[0].text_content() or ""
-                if first_name.strip() and first_name.strip() != " ":
-                    data.append({
-                        "first_name": first_name.strip(),
-                        "last_name": (cells[1].text_content() or "").strip(),
-                        "age": (cells[2].text_content() or "").strip(),
-                        "email": (cells[3].text_content() or "").strip(),
-                        "salary": (cells[4].text_content() or "").strip(),
-                        "department": (cells[5].text_content() or "").strip(),
-                    })
-        return data
+        return self.page.evaluate("""() => {
+            const rows = document.querySelectorAll('tbody tr');
+            const data = [];
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 6) {
+                    const firstName = (cells[0].textContent || '').trim();
+                    if (firstName) {
+                        data.push({
+                            first_name: firstName,
+                            last_name: (cells[1].textContent || '').trim(),
+                            age: (cells[2].textContent || '').trim(),
+                            email: (cells[3].textContent || '').trim(),
+                            salary: (cells[4].textContent || '').trim(),
+                            department: (cells[5].textContent || '').trim(),
+                        });
+                    }
+                }
+            });
+            return data;
+        }""")
 
     def find_row_by_email(self, email: str) -> Optional[int]:
         """Найти индекс строки по email.
