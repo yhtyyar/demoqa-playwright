@@ -64,6 +64,7 @@ def page(context: BrowserContext) -> Page:
     """Создать новую страницу для каждого теста."""
     page = context.new_page()
     page.set_default_timeout(Settings.TIMEOUT)
+    page.set_default_navigation_timeout(Settings.PAGE_LOAD_TIMEOUT)
     yield page
     page.close()
 

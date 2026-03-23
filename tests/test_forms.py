@@ -15,7 +15,10 @@ class TestPracticeForm:
         """Заполнение и отправка формы Practice Form."""
         # Arrange
         data = TestData.PRACTICE_FORM_DATA
-        page.goto(f"{Settings.BASE_URL}/automation-practice-form")
+        page.goto(
+            f"{Settings.BASE_URL}/automation-practice-form",
+            wait_until="domcontentloaded",
+        )
 
         # Удалить рекламные баннеры
         page.evaluate(
@@ -62,7 +65,10 @@ class TestPracticeForm:
     def test_form_fields_visible(self, page: Page) -> None:
         """Проверка видимости основных полей формы Practice Form."""
         # Arrange
-        page.goto(f"{Settings.BASE_URL}/automation-practice-form")
+        page.goto(
+            f"{Settings.BASE_URL}/automation-practice-form",
+            wait_until="domcontentloaded",
+        )
 
         # Assert
         assert page.locator("#firstName").is_visible(), "Поле First Name не видно"

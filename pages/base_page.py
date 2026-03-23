@@ -30,7 +30,11 @@ class BasePage:
         """
         full_url = f"{Settings.BASE_URL}{url_path}"
         logger.info("Открытие страницы: %s", full_url)
-        self.page.goto(full_url, timeout=Settings.PAGE_LOAD_TIMEOUT)
+        self.page.goto(
+            full_url,
+            timeout=Settings.PAGE_LOAD_TIMEOUT,
+            wait_until="domcontentloaded",
+        )
         try:
             self.page.wait_for_load_state("networkidle", timeout=15000)
         except PlaywrightTimeout:
