@@ -16,10 +16,15 @@ class TestSmoke:
     def test_homepage_loads(self, page: Page) -> None:
         """Проверка загрузки главной страницы DemoQA."""
         # Act
-        page.goto("https://demoqa.com")
+        response = page.goto("https://demoqa.com")
 
-        # Assert
-        assert "DEMOQA" in page.title().upper(), "Заголовок главной страницы не содержит 'DEMOQA'"
+        # Assert — проверяем HTTP-статус, URL и наличие ключевых элементов
+        assert response is not None and response.ok, \
+            f"Главная страница вернула ошибку: {response.status if response else 'нет ответа'}"
+        assert "demoqa.com" in page.url, \
+            f"URL не содержит 'demoqa.com': {page.url}"
+        assert page.locator(".category-cards").is_visible(), \
+            "Карточки категорий не отображаются на главной странице"
 
     @pytest.mark.smoke
     def test_textbox_basic_flow(self, page: Page) -> None:

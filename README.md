@@ -146,13 +146,36 @@ docker run --rm -e BROWSER=firefox -v ./reports:/app/reports demoqa-tests
 
 ### Docker Compose — сервисы
 
-| Сервис           | Описание                     |
-|------------------|------------------------------|
-| `smoke`          | Smoke-тесты (Chromium)       |
-| `regression`     | Полный regression (Chromium) |
-| `tests-chromium` | Все тесты в Chromium         |
-| `tests-firefox`  | Все тесты в Firefox          |
-| `tests-webkit`   | Все тесты в WebKit           |
+| Сервис           | Движок   | Покрытие браузеров                    |
+|------------------|----------|---------------------------------------|
+| `smoke`          | Blink    | Smoke-тесты (Chromium)                |
+| `regression`     | Blink    | Полный regression (Chromium)          |
+| `tests-chromium` | Blink    | Google Chrome, Яндекс Браузер, Edge   |
+| `tests-firefox`  | Gecko    | Mozilla Firefox                       |
+| `tests-webkit`   | WebKit   | Safari (macOS / iOS)                  |
+
+## Кросс-браузерное тестирование
+
+Playwright поддерживает 3 движка, покрывающих все основные браузеры:
+
+| Движок     | Env `BROWSER` | Какие браузеры покрывает                         |
+|------------|---------------|--------------------------------------------------|
+| **Blink**  | `chromium`    | Google Chrome, Яндекс Браузер, Microsoft Edge    |
+| **Gecko**  | `firefox`     | Mozilla Firefox                                  |
+| **WebKit** | `webkit`      | Safari (macOS, iOS)                              |
+
+```bash
+# Запуск на конкретном движке (локально)
+BROWSER=firefox pytest -m smoke
+
+# Запуск реального Google Chrome (через channel)
+BROWSER=chromium BROWSER_CHANNEL=chrome pytest -m smoke
+
+# Все 3 движка через Docker Compose
+docker compose run --rm tests-chromium
+docker compose run --rm tests-firefox
+docker compose run --rm tests-webkit
+```
 
 ## Маркировка тестов
 

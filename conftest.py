@@ -5,24 +5,45 @@ from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 
 from config.settings import Settings
 from pages.main_page import MainPage
+from utils.logger import logger
 
 
 @pytest.fixture(scope="session")
 def browser():
-    """Создать экземпляр браузера на всю тестовую сессию."""
+    """Создать экземпляр браузера на всю тестовую сессию.
+
+    Поддерживаемые движки (BROWSER):
+        - chromium — Blink (Google Chrome, Яндекс Браузер, Edge)
+        - firefox  — Gecko (Mozilla Firefox)
+        - webkit   — WebKit (Safari)
+
+    Дополнительно (BROWSER_CHANNEL):
+        - chrome, msedge — запуск реального браузера вместо встроенного
+    """
     with sync_playwright() as p:
         browser_args = {
             "headless": Settings.HEADLESS,
             "slow_mo": 100 if not Settings.HEADLESS else 0,
         }
 
-        if Settings.BROWSER == "firefox":
-            browser = p.firefox.launch(**browser_args)
-        elif Settings.BROWSER == "webkit":
-            browser = p.webkit.launch(**browser_args)
-        else:
-            browser = p.chromium.launch(**browser_args)
+        if Settings.BROWSER_CHANNEL:
+            browser_args["channel"] = Settings.BROWSER_CHANNEL
 
+        if Settings.BROWSER == "firefox":
+            browser_type = p.firefox
+        elif Settings.BROWSER == "webkit":
+            browser_type = p.webkit
+        else:
+            browser_type = p.chromium
+
+        logger.info(
+            "Запуск браузера: engine=%s, channel=%s, headless=%s",
+            Settings.BROWSER,
+            Settings.BROWSER_CHANNEL or "default",
+            Settings.HEADLESS,
+        )
+
+        browser = browser_type.launch(**browser_args)
         yield browser
         browser.close()
 

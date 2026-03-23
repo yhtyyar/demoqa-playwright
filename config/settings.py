@@ -13,6 +13,7 @@ class Settings:
 
     BASE_URL: str = os.getenv("BASE_URL", "https://demoqa.com")
     BROWSER: str = os.getenv("BROWSER", "chromium")
+    BROWSER_CHANNEL: str = os.getenv("BROWSER_CHANNEL", "")
     HEADLESS: bool = os.getenv("HEADLESS", "true").lower() == "true"
     TIMEOUT: int = int(os.getenv("TIMEOUT", "30000"))
     SCREENSHOT_ON_FAIL: bool = os.getenv("SCREENSHOT_ON_FAIL", "true").lower() == "true"
