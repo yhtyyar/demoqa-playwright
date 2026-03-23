@@ -5,6 +5,10 @@ LABEL description="DemoQA Playwright Automation Framework"
 
 WORKDIR /app
 
+# gosu — для безопасного переключения на tester в entrypoint
+RUN apt-get update && apt-get install -y --no-install-recommends gosu \
+    && rm -rf /var/lib/apt/lists/*
+
 # Установка зависимостей (кэшируется отдельным слоем)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -12,15 +16,19 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копирование исходного кода
 COPY . .
 
-# Создание директорий для отчётов с открытыми правами (для volume mount)
-RUN mkdir -p reports/html reports/xml reports/screenshots reports/allure \
-    && chmod -R 777 reports
-
-# Пользователь без root-прав (безопасность)
+# Создание пользователя tester (используется в entrypoint.sh)
 RUN groupadd -r tester && useradd -r -g tester -d /home/tester -s /bin/bash tester \
     && mkdir -p /home/tester \
     && chown -R tester:tester /app /home/tester
-USER tester
+
+# Создание директорий для отчётов (будут перезаписаны при volume mount,
+# но нужны для запуска без volume)
+RUN mkdir -p reports/html reports/xml reports/screenshots reports/allure \
+    && chmod -R 777 reports
+
+# entrypoint: создаёт директории, фиксит права volume, запускает pytest от tester
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Переменные окружения по умолчанию
 ENV BASE_URL=https://demoqa.com \
@@ -30,6 +38,6 @@ ENV BASE_URL=https://demoqa.com \
     TIMEOUT=30000 \
     SCREENSHOT_ON_FAIL=true
 
-# Точка входа по умолчанию — smoke-тесты
-ENTRYPOINT ["pytest"]
+# entrypoint запускается от root, внутри переключается на tester через gosu
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["-m", "smoke", "--html=reports/html/report.html", "--self-contained-html", "-v"]
