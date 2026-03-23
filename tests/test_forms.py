@@ -3,6 +3,7 @@
 import pytest
 from playwright.sync_api import Page
 
+from config.settings import Settings
 from config.test_data import TestData
 
 
@@ -14,7 +15,7 @@ class TestPracticeForm:
         """Заполнение и отправка формы Practice Form."""
         # Arrange
         data = TestData.PRACTICE_FORM_DATA
-        page.goto("https://demoqa.com/automation-practice-form")
+        page.goto(f"{Settings.BASE_URL}/automation-practice-form")
 
         # Удалить рекламные баннеры
         page.evaluate(
@@ -61,7 +62,7 @@ class TestPracticeForm:
     def test_form_fields_visible(self, page: Page) -> None:
         """Проверка видимости основных полей формы Practice Form."""
         # Arrange
-        page.goto("https://demoqa.com/automation-practice-form")
+        page.goto(f"{Settings.BASE_URL}/automation-practice-form")
 
         # Assert
         assert page.locator("#firstName").is_visible(), "Поле First Name не видно"

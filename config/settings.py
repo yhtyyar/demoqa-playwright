@@ -39,10 +39,10 @@ class Settings:
     @classmethod
     def create_directories(cls) -> None:
         """Создать необходимые директории для отчётов и скриншотов."""
-        cls.REPORTS_DIR.mkdir(exist_ok=True)
-        cls.SCREENSHOTS_DIR.mkdir(exist_ok=True)
-        (cls.REPORTS_DIR / "html").mkdir(exist_ok=True)
-        (cls.REPORTS_DIR / "xml").mkdir(exist_ok=True)
+        cls.REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        cls.SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+        (cls.REPORTS_DIR / "html").mkdir(parents=True, exist_ok=True)
+        (cls.REPORTS_DIR / "xml").mkdir(parents=True, exist_ok=True)
 
 
 Settings.create_directories()
