@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Reports (будут монтироваться как volume)
+reports/html/
+reports/xml/
+reports/screenshots/
+reports/allure/
+reports/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment (секреты)
+.env
+
+# Documentation (не нужна в образе)
+docs/
+*.md
+!requirements.txt
+
+# Cache
+.pytest_cache/
+.cache/

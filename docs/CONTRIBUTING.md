@@ -2,13 +2,32 @@
 
 ## Начало работы
 
+### Вариант A: Docker (рекомендуется)
+
 1. Клонировать репозиторий:
+
+   ```bash
+   git clone git@github.com:yhtyyar/demoqa-playwright.git
+   cd demoqa-playwright
+   ```
+
+2. Запустить тесты через Docker Compose:
+
+   ```bash
+   docker compose run --rm smoke
+   ```
+
+### Вариант B: Локальная установка
+
+1. Клонировать репозиторий:
+
    ```bash
    git clone git@github.com:yhtyyar/demoqa-playwright.git
    cd demoqa-playwright
    ```
 
 2. Создать виртуальное окружение:
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # Linux/macOS
@@ -16,17 +35,34 @@
    ```
 
 3. Установить зависимости:
+
    ```bash
    pip install -r requirements.txt
    playwright install
    ```
 
 4. Скопировать `.env.example` в `.env` и настроить переменные:
+
    ```bash
    cp .env.example .env
    ```
 
 ## Запуск тестов
+
+### Через Docker Compose
+
+```bash
+# Smoke-тесты
+docker compose run --rm smoke
+
+# Regression-тесты
+docker compose run --rm regression
+
+# Конкретный браузер
+docker compose run --rm tests-firefox
+```
+
+### Локально
 
 ```bash
 # Smoke-тесты
@@ -44,7 +80,7 @@ HEADLESS=false pytest
 
 ## Перед коммитом
 
-1. Убедиться, что smoke-тесты проходят
+1. Убедиться, что smoke-тесты проходят (`docker compose run --rm smoke` или `pytest -m smoke`)
 2. Следовать [Руководству по стилю](STYLE_GUIDE.md)
 3. Использовать формат коммитов: `<тип>(<область>): <описание>`
 

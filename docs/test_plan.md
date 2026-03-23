@@ -53,11 +53,20 @@
 - Firefox — дополнительный
 - WebKit — дополнительный
 
-### 3.3 CI/CD
+### 3.3 Контейнеризация
 
-- GitHub Actions
-- Запуск smoke-тестов по push/PR
-- Full regression — nightly
+- **Docker:** образ на базе `mcr.microsoft.com/playwright/python:v1.42.0-jammy`
+- **Docker Compose:** сервисы для smoke, regression, матрица браузеров
+- **Изоляция:** тесты запускаются от непривилегированного пользователя
+- **Отчёты:** монтируются через volume на хост-машину
+
+### 3.4 CI/CD
+
+- **GitHub Actions** — 5 jobs: Lint → Build → Smoke → Regression → Report
+- **Push / PR** → Lint + Build + Smoke
+- **Nightly (02:00 UTC)** → полный regression по матрице браузеров
+- **Manual dispatch** → настраиваемый маркер тестов
+- **Артефакты:** HTML-отчёты, JUnit XML, скриншоты (14 дней хранения)
 
 ## 4. Критерии входа / выхода
 

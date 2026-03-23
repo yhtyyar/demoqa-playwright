@@ -1,0 +1,95 @@
+services:
+  # --- Smoke-тесты (быстрая проверка) ---
+  smoke:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demoqa-smoke
+    environment:
+      - BASE_URL=https://demoqa.com
+      - BROWSER=chromium
+      - HEADLESS=true
+      - TIMEOUT=30000
+      - SCREENSHOT_ON_FAIL=true
+    volumes:
+      - ./reports:/app/reports
+    command: [
+      "-m", "smoke",
+      "--html=reports/html/smoke-report.html",
+      "--self-contained-html",
+      "-v"
+    ]
+
+  # --- Regression-тесты (полный набор) ---
+  regression:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demoqa-regression
+    environment:
+      - BASE_URL=https://demoqa.com
+      - BROWSER=chromium
+      - HEADLESS=true
+      - TIMEOUT=30000
+      - SCREENSHOT_ON_FAIL=true
+    volumes:
+      - ./reports:/app/reports
+    command: [
+      "--html=reports/html/regression-report.html",
+      "--self-contained-html",
+      "-v"
+    ]
+
+  # --- Все тесты (Chromium) ---
+  tests-chromium:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demoqa-chromium
+    environment:
+      - BASE_URL=https://demoqa.com
+      - BROWSER=chromium
+      - HEADLESS=true
+    volumes:
+      - ./reports:/app/reports
+    command: [
+      "--html=reports/html/chromium-report.html",
+      "--self-contained-html",
+      "-v"
+    ]
+
+  # --- Все тесты (Firefox) ---
+  tests-firefox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demoqa-firefox
+    environment:
+      - BASE_URL=https://demoqa.com
+      - BROWSER=firefox
+      - HEADLESS=true
+    volumes:
+      - ./reports:/app/reports
+    command: [
+      "--html=reports/html/firefox-report.html",
+      "--self-contained-html",
+      "-v"
+    ]
+
+  # --- Все тесты (WebKit) ---
+  tests-webkit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: demoqa-webkit
+    environment:
+      - BASE_URL=https://demoqa.com
+      - BROWSER=webkit
+      - HEADLESS=true
+    volumes:
+      - ./reports:/app/reports
+    command: [
+      "--html=reports/html/webkit-report.html",
+      "--self-contained-html",
+      "-v"
+    ]

@@ -1,20 +1,31 @@
 # DemoQA Playwright Automation
 
-Фреймворк автоматизированного тестирования для [DemoQA](https://demoqa.com/) на базе **Playwright + Python + pytest**.
+[![DemoQA Tests](https://github.com/yhtyyar/demoqa-playwright/actions/workflows/tests.yml/badge.svg)](https://github.com/yhtyyar/demoqa-playwright/actions/workflows/tests.yml)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python&logoColor=white)](https://python.org)
+[![Playwright](https://img.shields.io/badge/Playwright-1.42-green?logo=playwright&logoColor=white)](https://playwright.dev/python/)
+[![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Фреймворк автоматизированного тестирования для [DemoQA](https://demoqa.com/) на базе **Playwright + Python + pytest + Docker**.
 
 ## Стек технологий
 
-- **Python** 3.9+
-- **Playwright** 1.42+
-- **pytest** 8.0+
-- **Faker** — генерация тестовых данных
-- **pytest-html** — HTML-отчёты
-- **allure-pytest** — отчёты Allure (опционально)
+| Технология         | Назначение                |
+|--------------------|---------------------------|
+| **Python** 3.9+    | Язык программирования     |
+| **Playwright**     | Браузерная автоматизация  |
+| **pytest**         | Тестовый фреймворк        |
+| **Docker**         | Контейнеризация и CI/CD   |
+| **Faker**          | Генерация тестовых данных |
+| **pytest-html**    | HTML-отчёты               |
+| **GitHub Actions** | Непрерывная интеграция    |
 
 ## Структура проекта
 
 ```text
 demoqa-playwright/
+├── Dockerfile               # Docker-образ для тестов
+├── docker-compose.yml       # Сервисы: smoke, regression, браузеры
 ├── conftest.py              # Глобальные фикстуры pytest
 ├── main.py                  # Точка входа для запуска
 ├── pytest.ini               # Конфигурация pytest
@@ -44,38 +55,53 @@ demoqa-playwright/
 │   ├── test_plan.md
 │   ├── test_cases.md
 │   └── bug_report_template.md
-└── reports/                 # Отчёты (автогенерация)
+├── .github/workflows/       # CI/CD
+│   └── tests.yml
+└── reports/                 # Отчёты (автогенерация, .gitignore)
 ```
 
 ## Быстрый старт
 
-### 1. Клонирование
+### Вариант 1: Docker (рекомендуется)
+
+Не требует установки Python, Playwright или браузеров на хост-машину.
 
 ```bash
 git clone git@github.com:yhtyyar/demoqa-playwright.git
 cd demoqa-playwright
+
+# Smoke-тесты
+docker compose run --rm smoke
+
+# Regression-тесты (все)
+docker compose run --rm regression
+
+# Тесты в конкретном браузере
+docker compose run --rm tests-chromium
+docker compose run --rm tests-firefox
+docker compose run --rm tests-webkit
 ```
 
-### 2. Установка
+Отчёты сохраняются в `reports/html/` на хост-машине.
+
+### Вариант 2: Локальная установка
 
 ```bash
+git clone git@github.com:yhtyyar/demoqa-playwright.git
+cd demoqa-playwright
+
 python -m venv venv
 venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Linux/macOS
 
 pip install -r requirements.txt
 playwright install
+
+copy .env.example .env         # Windows
+# cp .env.example .env         # Linux/macOS
 ```
 
-### 3. Настройка
-
-Скопировать `.env.example` в `.env` и при необходимости отредактировать:
-
-```bash
-copy .env.example .env
-```
-
-### 4. Запуск тестов
+### Запуск тестов (локально)
 
 ```bash
 # Smoke-тесты
@@ -94,6 +120,40 @@ set HEADLESS=false && pytest -m smoke
 python main.py
 ```
 
+## Docker
+
+### Сборка образа
+
+```bash
+docker build -t demoqa-tests .
+```
+
+### Запуск контейнера
+
+```bash
+# Smoke-тесты (по умолчанию)
+docker run --rm -v ./reports:/app/reports demoqa-tests
+
+# Все тесты
+docker run --rm -v ./reports:/app/reports demoqa-tests -v --html=reports/html/report.html --self-contained-html
+
+# С выбором маркера
+docker run --rm -v ./reports:/app/reports demoqa-tests -m regression -v
+
+# С выбором браузера
+docker run --rm -e BROWSER=firefox -v ./reports:/app/reports demoqa-tests
+```
+
+### Docker Compose — сервисы
+
+| Сервис           | Описание                     |
+|------------------|------------------------------|
+| `smoke`          | Smoke-тесты (Chromium)       |
+| `regression`     | Полный regression (Chromium) |
+| `tests-chromium` | Все тесты в Chromium         |
+| `tests-firefox`  | Все тесты в Firefox          |
+| `tests-webkit`   | Все тесты в WebKit           |
+
 ## Маркировка тестов
 
 | Маркер       | Описание                         |
@@ -102,6 +162,58 @@ python main.py
 | `regression` | Основной функционал (P1)         |
 | `ui`         | Валидация UI-элементов (P2)      |
 
+## CI/CD Pipeline
+
+Проект использует **GitHub Actions** с Docker-контейнеризацией.
+
+### Архитектура пайплайна
+
+```text
+push / PR                      schedule (nightly)
+    │                                │
+    ▼                                ▼
+┌──────────┐                  ┌──────────┐
+│   Lint   │                  │   Lint   │
+└────┬─────┘                  └────┬─────┘
+     ▼                             ▼
+┌──────────┐                  ┌──────────┐
+│  Build   │ Docker image     │  Build   │
+└────┬─────┘                  └────┬─────┘
+     ▼                             ▼
+┌──────────┐                  ┌──────────┐
+│  Smoke   │                  │  Smoke   │
+└────┬─────┘                  └────┬─────┘
+     │                             ▼
+     │                   ┌─────────┼─────────┐
+     │                   ▼         ▼         ▼
+     │              Chromium   Firefox    WebKit
+     │                   │         │         │
+     ▼                   └─────────┼─────────┘
+┌──────────┐                       ▼
+│  Report  │◄──────────────── ┌──────────┐
+└──────────┘                  │  Report  │
+                              └──────────┘
+```
+
+### Триггеры
+
+| Событие                  | Что запускается                                          |
+|--------------------------|----------------------------------------------------------|
+| **Push** (main/develop)  | Lint → Build → Smoke → Report                            |
+| **Pull Request**         | Lint → Build → Smoke → Report                            |
+| **Nightly** (02:00 UTC)  | Lint → Build → Smoke → Regression (3 браузера) → Report  |
+| **Manual dispatch**      | Настраиваемый маркер тестов                              |
+
+### Артефакты
+
+После каждого запуска CI сохраняются:
+
+- **HTML-отчёты** — интерактивные отчёты pytest-html
+- **JUnit XML** — результаты в формате JUnit (для интеграций)
+- **Скриншоты** — снимки экрана при падении тестов
+
+Отчёты доступны во вкладке **Actions → выбрать запуск → Artifacts**.
+
 ## Документация
 
 - [Руководство по стилю](docs/STYLE_GUIDE.md)
@@ -109,10 +221,3 @@ python main.py
 - [Тест-план](docs/test_plan.md)
 - [Тест-кейсы](docs/test_cases.md)
 - [Шаблон баг-репорта](docs/bug_report_template.md)
-
-## CI/CD
-
-Проект включает GitHub Actions workflow для автоматического запуска тестов:
-
-- **Push / PR** → smoke-тесты
-- Отчёт сохраняется как артефакт
