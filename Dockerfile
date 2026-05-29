@@ -23,7 +23,7 @@ RUN groupadd -r tester && useradd -r -g tester -d /home/tester -s /bin/bash test
 
 # Создание директорий для отчётов (будут перезаписаны при volume mount,
 # но нужны для запуска без volume)
-RUN mkdir -p reports/html reports/xml reports/screenshots reports/allure \
+RUN mkdir -p reports/html reports/xml reports/screenshots reports/allure reports/allure-results \
     && chmod -R 777 reports
 
 # entrypoint: создаёт директории, фиксит права volume, запускает pytest от tester

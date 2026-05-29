@@ -1,70 +1,84 @@
-# DemoQA Playwright Automation
+# DemoQA Playwright Automation Framework
 
-[![DemoQA Tests](https://github.com/yhtyyar/demoqa-playwright/actions/workflows/tests.yml/badge.svg)](https://github.com/yhtyyar/demoqa-playwright/actions/workflows/tests.yml)
-[![Python](https://img.shields.io/badge/Python-3.9%2B-blue?logo=python&logoColor=white)](https://python.org)
+[![CI/CD](https://github.com/yhtyyar/demoqa-playwright/actions/workflows/tests.yml/badge.svg)](https://github.com/yhtyyar/demoqa-playwright/actions/workflows/tests.yml)
+[![Allure Report](https://img.shields.io/badge/Allure_Report-Live-brightgreen?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMiAxNWwtNS01IDEuNDEtMS40MUwxMCAxNC4xN2w3LjU5LTcuNTlMMTkgOGwtOSA5eiIvPjwvc3ZnPg==)](https://yhtyyar.github.io/demoqa-playwright)
+[![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python&logoColor=white)](https://python.org)
 [![Playwright](https://img.shields.io/badge/Playwright-1.42-green?logo=playwright&logoColor=white)](https://playwright.dev/python/)
 [![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Фреймворк автоматизированного тестирования для [DemoQA](https://demoqa.com/) на базе **Playwright + Python + pytest + Docker**.
+Производственный фреймворк автоматизированного тестирования для [DemoQA](https://demoqa.com/) на базе **Playwright + Python + pytest + Docker**.
+
+**[Живой Allure Report](https://yhtyyar.github.io/demoqa-playwright)** — интерактивные результаты с историей прогонов, трендами и детальными шагами.
+
+---
+
+## Почему стоит посмотреть этот проект
+
+- **Page Object Model** с базовым классом и переиспользуемыми методами ожидания — устойчив к флакинессу
+- **Полная Docker-изоляция**: тесты идентичны локально и в CI, нет проблемы «у меня работает»
+- **Кросс-браузерная матрица** в CI: Chromium / Firefox / WebKit за один пайплайн
+- **Allure Reports на GitHub Pages** с историей трендов — результаты доступны по ссылке без скачивания артефактов
+- **Pre-commit hooks**: black + flake8 не пропускают некорректный код даже на уровне коммита
+
+---
+
+## Архитектура
+
+```mermaid
+graph LR
+    subgraph code["Исходный код"]
+        CFG[config/\nSettings & TestData]
+        POM[pages/\nPage Object Model]
+        UTL[utils/\nHelpers & Logger]
+        TST[tests/\nTest Suites]
+    end
+
+    subgraph ci["CI/CD Pipeline"]
+        L[Lint\nflake8 + black] --> B[Docker Build]
+        B --> S[Smoke Tests\nChromium]
+        S --> R[Regression Matrix\nChromium · Firefox · WebKit]
+        R --> A[Allure Report\nGitHub Pages]
+        S --> A
+    end
+
+    CFG --> TST
+    POM --> TST
+    UTL --> TST
+```
+
+### Ключевые архитектурные решения
+
+| Решение | Обоснование |
+| --- | --- |
+| **Sync Playwright API** | Детерминированный поток выполнения, нет `await`-цепочек, проще отлаживать |
+| **`page.wait_for_selector` в `BasePage`** | Все ожидания инкапсулированы — тесты не знают о тайминге |
+| **Faker для тестовых данных** | Изолированные данные на каждый прогон, нет зависимостей между тестами |
+| **Docker ENTRYPOINT + gosu** | Безопасная смена UID при volume mount — нет PermissionError в CI |
+| **`fail-fast: false` в матрице** | Падение одного браузера не прерывает проверку остальных |
+
+---
 
 ## Стек технологий
 
-| Технология         | Назначение                |
-|--------------------|---------------------------|
-| **Python** 3.9+    | Язык программирования     |
-| **Playwright**     | Браузерная автоматизация  |
-| **pytest**         | Тестовый фреймворк        |
-| **Docker**         | Контейнеризация и CI/CD   |
-| **Faker**          | Генерация тестовых данных |
-| **pytest-html**    | HTML-отчёты               |
-| **GitHub Actions** | Непрерывная интеграция    |
+| Технология | Назначение |
+| --- | --- |
+| **Python 3.11** | Язык программирования |
+| **Playwright 1.42** | Браузерная автоматизация (sync API) |
+| **pytest 8** | Тестовый фреймворк, фикстуры, маркеры |
+| **Allure pytest** | Интерактивные отчёты с историей прогонов |
+| **Docker + gosu** | Воспроизводимая среда, безопасный volume mount |
+| **Faker** | Генерация тестовых данных |
+| **flake8 + black** | Линтинг и форматирование кода |
+| **pre-commit** | Проверки качества на уровне коммита |
+| **GitHub Actions** | CI/CD: lint → build → smoke → regression → Allure Pages |
 
-## Структура проекта
-
-```text
-demoqa-playwright/
-├── Dockerfile               # Docker-образ для тестов
-├── docker-compose.yml       # Сервисы: smoke, regression, браузеры
-├── conftest.py              # Глобальные фикстуры pytest
-├── main.py                  # Точка входа для запуска
-├── pytest.ini               # Конфигурация pytest
-├── requirements.txt         # Зависимости
-├── config/                  # Настройки и тестовые данные
-│   ├── settings.py
-│   └── test_data.py
-├── pages/                   # Page Object Model
-│   ├── base_page.py
-│   ├── main_page.py
-│   └── elements/
-│       ├── text_box_page.py
-│       ├── check_box_page.py
-│       ├── radio_button_page.py
-│       ├── buttons_page.py
-│       └── web_tables_page.py
-├── tests/                   # Тесты
-│   ├── test_smoke.py
-│   ├── test_elements.py
-│   └── test_forms.py
-├── utils/                   # Утилиты
-│   ├── helpers.py
-│   └── logger.py
-├── docs/                    # Документация
-│   ├── STYLE_GUIDE.md
-│   ├── CONTRIBUTING.md
-│   ├── test_plan.md
-│   ├── test_cases.md
-│   └── bug_report_template.md
-├── .github/workflows/       # CI/CD
-│   └── tests.yml
-└── reports/                 # Отчёты (автогенерация, .gitignore)
-```
+---
 
 ## Быстрый старт
 
-### Вариант 1: Docker (рекомендуется)
-
-Не требует установки Python, Playwright или браузеров на хост-машину.
+### Docker (рекомендуется)
 
 ```bash
 git clone git@github.com:yhtyyar/demoqa-playwright.git
@@ -73,169 +87,159 @@ cd demoqa-playwright
 # Smoke-тесты
 docker compose run --rm smoke
 
-# Regression-тесты (все)
-docker compose run --rm regression
-
-# Тесты в конкретном браузере
-docker compose run --rm tests-chromium
+# Regression на конкретном браузере
 docker compose run --rm tests-firefox
 docker compose run --rm tests-webkit
+
+# Все браузеры
+docker compose run --rm regression
 ```
 
-Отчёты сохраняются в `reports/html/` на хост-машине.
+Отчёты сохраняются в `reports/` на хост-машине.
 
-### Вариант 2: Локальная установка
+### Локальная установка
 
 ```bash
-git clone git@github.com:yhtyyar/demoqa-playwright.git
-cd demoqa-playwright
-
-python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Linux/macOS
+python -m venv venv && source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate                           # Windows
 
 pip install -r requirements.txt
 playwright install
 
-copy .env.example .env         # Windows
-# cp .env.example .env         # Linux/macOS
+cp .env.example .env
 ```
 
-### Запуск тестов (локально)
+### Запуск тестов
 
 ```bash
 # Smoke-тесты
 pytest -m smoke
 
-# Все тесты
+# С Allure-отчётом (превью в браузере)
+pytest -m smoke
+allure serve reports/allure-results
+
+# Полный regression
 pytest
 
-# С HTML-отчётом
-pytest --html=reports/html/report.html --self-contained-html
-
-# В headed-режиме (с GUI браузера)
-set HEADLESS=false && pytest -m smoke
-
-# Через точку входа
-python main.py
-```
-
-## Docker
-
-### Сборка образа
-
-```bash
-docker build -t demoqa-tests .
-```
-
-### Запуск контейнера
-
-```bash
-# Smoke-тесты (по умолчанию)
-docker run --rm -v ./reports:/app/reports demoqa-tests
-
-# Все тесты
-docker run --rm -v ./reports:/app/reports demoqa-tests -v --html=reports/html/report.html --self-contained-html
-
-# С выбором маркера
-docker run --rm -v ./reports:/app/reports demoqa-tests -m regression -v
-
-# С выбором браузера
-docker run --rm -e BROWSER=firefox -v ./reports:/app/reports demoqa-tests
-```
-
-### Docker Compose — сервисы
-
-| Сервис           | Движок   | Покрытие браузеров                    |
-|------------------|----------|---------------------------------------|
-| `smoke`          | Blink    | Smoke-тесты (Chromium)                |
-| `regression`     | Blink    | Полный regression (Chromium)          |
-| `tests-chromium` | Blink    | Google Chrome, Яндекс Браузер, Edge   |
-| `tests-firefox`  | Gecko    | Mozilla Firefox                       |
-| `tests-webkit`   | WebKit   | Safari (macOS / iOS)                  |
-
-## Кросс-браузерное тестирование
-
-Playwright поддерживает 3 движка, покрывающих все основные браузеры:
-
-| Движок     | Env `BROWSER` | Какие браузеры покрывает                         |
-|------------|---------------|--------------------------------------------------|
-| **Blink**  | `chromium`    | Google Chrome, Яндекс Браузер, Microsoft Edge    |
-| **Gecko**  | `firefox`     | Mozilla Firefox                                  |
-| **WebKit** | `webkit`      | Safari (macOS, iOS)                              |
-
-```bash
-# Запуск на конкретном движке (локально)
+# Конкретный браузер
 BROWSER=firefox pytest -m smoke
-
-# Запуск реального Google Chrome (через channel)
-BROWSER=chromium BROWSER_CHANNEL=chrome pytest -m smoke
-
-# Все 3 движка через Docker Compose
-docker compose run --rm tests-chromium
-docker compose run --rm tests-firefox
-docker compose run --rm tests-webkit
 ```
 
-## Маркировка тестов
+### Pre-commit hooks
 
-| Маркер       | Описание                         |
-|--------------|----------------------------------|
-| `smoke`      | Критический функционал (P0)      |
-| `regression` | Основной функционал (P1)         |
-| `ui`         | Валидация UI-элементов (P2)      |
+```bash
+pre-commit install       # установить hooks
+pre-commit run --all-files  # проверить весь код
+```
+
+---
 
 ## CI/CD Pipeline
-
-Проект использует **GitHub Actions** с Docker-контейнеризацией.
 
 ### Архитектура пайплайна
 
 ```text
-push / PR                      schedule (nightly)
-    │                                │
-    ▼                                ▼
-┌──────────┐                  ┌──────────┐
-│   Lint   │                  │   Lint   │
-└────┬─────┘                  └────┬─────┘
-     ▼                             ▼
-┌──────────┐                  ┌──────────┐
-│  Build   │ Docker image     │  Build   │
-└────┬─────┘                  └────┬─────┘
-     ▼                             ▼
-┌──────────┐                  ┌──────────┐
-│  Smoke   │                  │  Smoke   │
-└────┬─────┘                  └────┬─────┘
-     │                             ▼
-     │                   ┌─────────┼─────────┐
-     │                   ▼         ▼         ▼
-     │              Chromium   Firefox    WebKit
-     │                   │         │         │
-     ▼                   └─────────┼─────────┘
-┌──────────┐                       ▼
-│  Report  │◄──────────────── ┌──────────┐
-└──────────┘                  │  Report  │
-                              └──────────┘
+push / PR                          schedule (nightly) / main
+    │                                        │
+    ▼                                        ▼
+┌──────────┐                         ┌──────────┐
+│   Lint   │  flake8 + black         │   Lint   │
+└────┬─────┘                         └────┬─────┘
+     ▼                                    ▼
+┌──────────┐                         ┌──────────┐
+│  Build   │  Docker image + cache   │  Build   │
+└────┬─────┘                         └────┬─────┘
+     ▼                                    ▼
+┌──────────┐                         ┌──────────┐
+│  Smoke   │  Chromium               │  Smoke   │
+└────┬─────┘                         └────┬─────┘
+     │                              ┌─────┼──────┐
+     │                              ▼     ▼      ▼
+     │                          Chrome Firefox WebKit
+     │                              └─────┼──────┘
+     ▼                                    ▼
+┌──────────┐                     ┌─────────────────┐
+│  Report  │ JUnit → PR comment  │  Deploy Allure  │ → GitHub Pages
+└──────────┘                     └─────────────────┘
 ```
 
 ### Триггеры
 
-| Событие                  | Что запускается                                          |
-|--------------------------|----------------------------------------------------------|
-| **Push** (main/develop)  | Lint → Build → Smoke → Report                            |
-| **Pull Request**         | Lint → Build → Smoke → Report                            |
-| **Nightly** (02:00 UTC)  | Lint → Build → Smoke → Regression (3 браузера) → Report  |
-| **Manual dispatch**      | Настраиваемый маркер тестов                              |
+| Событие | Что запускается |
+| --- | --- |
+| **Push** (main/develop) | Lint → Build → Smoke → Report + Allure Deploy |
+| **Pull Request** | Lint → Build → Smoke → JUnit Report |
+| **Nightly** (02:00 UTC) | Lint → Build → Smoke → Regression (3 браузера) → Allure Deploy |
+| **Manual dispatch** | Настраиваемый маркер тестов |
 
 ### Артефакты
 
-После каждого запуска CI сохраняются:
-
-- **HTML-отчёты** — интерактивные отчёты pytest-html
-- **JUnit XML** — результаты в формате JUnit (для интеграций)
+- **Allure Report** — [живой отчёт на GitHub Pages](https://yhtyyar.github.io/demoqa-playwright) с историей прогонов
+- **HTML-отчёты** — pytest-html за каждый прогон
+- **JUnit XML** — результаты в формате JUnit (комментарий к PR)
 - **Скриншоты** — снимки экрана при падении тестов
 
-Отчёты доступны во вкладке **Actions → выбрать запуск → Artifacts**.
+---
+
+## Структура проекта
+
+```text
+demoqa-playwright/
+├── .github/workflows/
+│   └── tests.yml            # CI: lint → build → smoke → regression → allure
+├── config/
+│   ├── settings.py          # Env-конфигурация (BASE_URL, BROWSER, TIMEOUT)
+│   └── test_data.py         # Тестовые данные через Faker
+├── pages/                   # Page Object Model
+│   ├── base_page.py         # Базовые методы ожидания и навигации
+│   ├── main_page.py
+│   └── elements/
+│       ├── text_box_page.py
+│       ├── check_box_page.py
+│       ├── radio_button_page.py
+│       ├── buttons_page.py
+│       └── web_tables_page.py
+├── tests/
+│   ├── test_smoke.py        # P0: критический функционал
+│   ├── test_elements.py     # P1: все Elements-секции
+│   └── test_forms.py        # P1: формы
+├── utils/
+│   ├── helpers.py
+│   └── logger.py
+├── docs/                    # Тест-план, тест-кейсы, style guide
+├── reports/                 # Артефакты (gitignore, кроме .gitkeep)
+├── conftest.py              # Фикстуры: browser / context / page / main_page
+├── pytest.ini               # Конфиг pytest + alluredir
+├── setup.cfg                # flake8 config
+├── .pre-commit-config.yaml  # black + flake8 + pre-commit-hooks
+├── Dockerfile               # Playwright + gosu образ
+├── docker-compose.yml       # Сервисы: smoke / regression / браузеры
+└── entrypoint.sh            # Безопасный volume mount + gosu
+```
+
+---
+
+## Маркировка тестов
+
+| Маркер | Описание | Приоритет |
+| --- | --- | --- |
+| `smoke` | Критический функционал, быстрая обратная связь | P0 |
+| `regression` | Основной функционал, полное покрытие | P1 |
+| `ui` | Валидация UI-элементов | P2 |
+
+---
+
+## Настройка GitHub Pages (одноразово)
+
+После первого пуша в `main`:
+
+1. Перейти в `Settings → Pages`
+2. Source: **Deploy from a branch**
+3. Branch: **gh-pages** / `/ (root)`
+4. Сохранить — через 2-3 минуты отчёт появится по адресу `https://yhtyyar.github.io/demoqa-playwright`
+
+---
 
 ## Документация
 

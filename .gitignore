@@ -51,9 +51,11 @@ htmlcov/
 .coverage.*
 coverage.xml
 
-# Allure
-allure-results/
-allure-report/
+# Allure (raw results и сгенерированный HTML — только .gitkeep остаётся)
+reports/allure-results/*
+!reports/allure-results/.gitkeep
+/allure-results/
+/allure-report/
 
 # Logs
 *.log
