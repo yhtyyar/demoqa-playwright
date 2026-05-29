@@ -1,19 +1,30 @@
 """Страница Accordian — раскрывающиеся панели."""
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import Page
 
 from pages.base_page import BasePage
 
 
 class AccordionPage(BasePage):
-    """Page Object для страницы https://demoqa.com/accordian."""
+    """Page Object для страницы https://demoqa.com/accordian.
 
-    SECTION1_TITLE = "#section1Heading"
-    SECTION2_TITLE = "#section2Heading"
-    SECTION3_TITLE = "#section3Heading"
-    SECTION1_CONTENT = "#section1Content"
-    SECTION2_CONTENT = "#section2Content"
-    SECTION3_CONTENT = "#section3Content"
+    DemoQA использует Bootstrap 4 collapse. Контент-дивы (#section1Content и т.д.)
+    могут отсутствовать в DOM или иметь другую структуру в зависимости от версии.
+    Надёжный подход — проверять aria-expanded на кнопке: Bootstrap всегда его выставляет.
+    """
+
+    # Кнопки внутри заголовков (именно они активируют collapse)
+    SECTION1_BTN = "#section1Heading button"
+    SECTION2_BTN = "#section2Heading button"
+    SECTION3_BTN = "#section3Heading button"
+
+    # Текст берём из .card-body внутри карточки по порядку
+    SECTION1_BODY = ".card:nth-child(1) .card-body"
+    SECTION2_BODY = ".card:nth-child(2) .card-body"
+    SECTION3_BODY = ".card:nth-child(3) .card-body"
+
+    _BTN_MAP = {1: "SECTION1_BTN", 2: "SECTION2_BTN", 3: "SECTION3_BTN"}
+    _BODY_MAP = {1: "SECTION1_BODY", 2: "SECTION2_BODY", 3: "SECTION3_BODY"}
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -23,38 +34,8 @@ class AccordionPage(BasePage):
         super().open("/accordian")
         return self
 
-    @property
-    def section1_title(self) -> Locator:
-        """Заголовок первой секции."""
-        return self.page.locator(self.SECTION1_TITLE)
-
-    @property
-    def section2_title(self) -> Locator:
-        """Заголовок второй секции."""
-        return self.page.locator(self.SECTION2_TITLE)
-
-    @property
-    def section3_title(self) -> Locator:
-        """Заголовок третьей секции."""
-        return self.page.locator(self.SECTION3_TITLE)
-
-    @property
-    def section1_content(self) -> Locator:
-        """Контент первой секции."""
-        return self.page.locator(self.SECTION1_CONTENT)
-
-    @property
-    def section2_content(self) -> Locator:
-        """Контент второй секции."""
-        return self.page.locator(self.SECTION2_CONTENT)
-
-    @property
-    def section3_content(self) -> Locator:
-        """Контент третьей секции."""
-        return self.page.locator(self.SECTION3_CONTENT)
-
     def click_section(self, section_number: int) -> "AccordionPage":
-        """Кликнуть по заголовку секции для раскрытия/сворачивания.
+        """Кликнуть по кнопке секции для раскрытия/сворачивания.
 
         Args:
             section_number: Номер секции (1, 2 или 3).
@@ -62,35 +43,29 @@ class AccordionPage(BasePage):
         Returns:
             Экземпляр AccordionPage для chaining.
         """
-        titles = {
-            1: self.section1_title,
-            2: self.section2_title,
-            3: self.section3_title,
-        }
-        self.click(titles[section_number])
-        self.page.wait_for_timeout(400)
+        selector = getattr(self, self._BTN_MAP[section_number])
+        self.click(self.page.locator(selector))
+        self.page.wait_for_timeout(500)
         return self
 
     def is_section_open(self, section_number: int) -> bool:
-        """Проверить, открыта ли секция.
+        """Проверить, открыта ли секция через aria-expanded на кнопке.
 
-        Bootstrap добавляет класс 'show' к открытому контенту (.collapse.show).
-        Проверяем атрибут class — надёжнее, чем is_visible(), которая ждёт 15 сек
-        и неправильно интерпретирует overflow:hidden на Bootstrap collapse.
+        Bootstrap 4 устанавливает aria-expanded='true' на button когда секция открыта.
+        Это надёжнее проверки CSS-класса collapse-div (тот может не иметь фиксированного ID).
 
         Args:
             section_number: Номер секции (1, 2 или 3).
 
         Returns:
-            True если Bootstrap-класс 'show' присутствует в атрибуте class.
+            True если aria-expanded='true' на кнопке секции.
         """
-        selectors = {
-            1: self.SECTION1_CONTENT,
-            2: self.SECTION2_CONTENT,
-            3: self.SECTION3_CONTENT,
-        }
-        classes = self.page.locator(selectors[section_number]).get_attribute("class") or ""
-        return "show" in classes.split()
+        selector = getattr(self, self._BTN_MAP[section_number])
+        locator = self.page.locator(selector)
+        if locator.count() == 0:
+            return False
+        aria = locator.get_attribute("aria-expanded", timeout=5000) or "false"
+        return aria.lower() == "true"
 
     def get_section_text(self, section_number: int) -> str:
         """Получить текст содержимого секции.
@@ -99,11 +74,10 @@ class AccordionPage(BasePage):
             section_number: Номер секции (1, 2 или 3).
 
         Returns:
-            Текст открытой секции.
+            Текст карточки-тела открытой секции.
         """
-        contents = {
-            1: self.section1_content,
-            2: self.section2_content,
-            3: self.section3_content,
-        }
-        return self.get_text(contents[section_number])
+        selector = getattr(self, self._BODY_MAP[section_number])
+        try:
+            return self.page.locator(selector).text_content(timeout=5000) or ""
+        except Exception:
+            return ""
