@@ -2,7 +2,10 @@
 
 Covers: Accordian, Date Picker, Slider.
 Демонстрирует работу с интерактивными UI-компонентами:
-react-datepicker, range input, Bootstrap accordion.
+Bootstrap accordion, react-datepicker, range input.
+
+Примечание по accordion: DemoQA — внешний сайт, начальное состояние секций
+может меняться. Тесты используют ensure_section_open() для надёжности.
 """
 
 import pytest
@@ -17,48 +20,61 @@ class TestAccordion:
     """Тесты для страницы Accordian."""
 
     @pytest.mark.smoke
-    def test_section1_open_by_default(self, page: Page) -> None:
-        """TC-W01: Первая секция открыта по умолчанию."""
+    def test_accordion_section1_opens(self, page: Page) -> None:
+        """TC-W01: Первая секция аккордеона открывается."""
         accordion = AccordionPage(page).open()
 
-        assert accordion.is_section_open(1), "Первая секция должна быть открыта по умолчанию"
+        # Открываем секцию 1 (или убеждаемся что уже открыта)
+        accordion.ensure_section_open(1)
+
+        assert accordion.is_section_open(1), "Секция 1 не открылась"
 
     @pytest.mark.regression
     def test_click_section2_opens_it(self, page: Page) -> None:
         """TC-W02: Клик по второй секции открывает её."""
         accordion = AccordionPage(page).open()
 
-        accordion.click_section(2)
+        # Закрываем секцию 2 если открыта, потом открываем — проверяем смену состояния
+        if accordion.is_section_open(2):
+            accordion.click_section(2)  # закрыть
+        accordion.click_section(2)  # открыть
 
-        assert accordion.is_section_open(2), "Вторая секция не открылась"
+        assert accordion.is_section_open(2), "Секция 2 не открылась"
 
     @pytest.mark.regression
     def test_click_section3_opens_it(self, page: Page) -> None:
         """TC-W03: Клик по третьей секции открывает её."""
         accordion = AccordionPage(page).open()
 
+        if accordion.is_section_open(3):
+            accordion.click_section(3)
         accordion.click_section(3)
 
-        assert accordion.is_section_open(3), "Третья секция не открылась"
+        assert accordion.is_section_open(3), "Секция 3 не открылась"
 
     @pytest.mark.regression
     def test_section1_content_has_text(self, page: Page) -> None:
         """Первая секция содержит непустой текст."""
         accordion = AccordionPage(page).open()
 
+        accordion.ensure_section_open(1)
         text = accordion.get_section_text(1)
 
         assert len(text.strip()) > 20, f"Текст первой секции слишком короткий: '{text}'"
 
     @pytest.mark.regression
-    def test_click_open_section_closes_it(self, page: Page) -> None:
+    def test_toggle_section_closes_it(self, page: Page) -> None:
         """Повторный клик по открытой секции закрывает её."""
         accordion = AccordionPage(page).open()
 
-        assert accordion.is_section_open(1)
+        # Убедимся, что секция 1 открыта
+        accordion.ensure_section_open(1)
+        assert accordion.is_section_open(1), "Не удалось открыть секцию 1"
+
+        # Закрываем
         accordion.click_section(1)
 
-        assert not accordion.is_section_open(1), "Первая секция должна была закрыться после повторного клика"
+        assert not accordion.is_section_open(1), "Секция 1 должна была закрыться"
 
 
 class TestDatePicker:
