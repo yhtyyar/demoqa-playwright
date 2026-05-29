@@ -74,8 +74,12 @@ class CheckBoxPage(BasePage):
     # --- Действия ---
 
     def expand_all(self) -> "CheckBoxPage":
-        """Развернуть все узлы дерева (кликая по каждому закрытому switcher)."""
-        while True:
+        """Развернуть все узлы дерева (кликая по каждому закрытому switcher).
+
+        Лимит 50 итераций защищает от бесконечного цикла если switcher-состояние
+        не меняется после клика (изменение DOM rc-tree на DemoQA).
+        """
+        for _ in range(50):
             closed = self.page.locator(self.SWITCHER_CLOSED)
             if closed.count() == 0:
                 break
@@ -85,7 +89,7 @@ class CheckBoxPage(BasePage):
 
     def collapse_all(self) -> "CheckBoxPage":
         """Свернуть все узлы дерева (кликая по каждому открытому switcher)."""
-        while True:
+        for _ in range(50):
             opened = self.page.locator(self.SWITCHER_OPEN)
             if opened.count() == 0:
                 break
