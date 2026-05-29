@@ -8,7 +8,8 @@ from pages.base_page import BasePage
 class SliderPage(BasePage):
     """Page Object для страницы https://demoqa.com/slider."""
 
-    INPUT_SLIDER = ".range-slider input[type='range']"
+    # На DemoQA сам input имеет класс range-slider, а не контейнер вокруг него
+    INPUT_SLIDER = "input.range-slider"
     INPUT_VALUE = "#sliderValue"
 
     def __init__(self, page: Page) -> None:
@@ -43,7 +44,7 @@ class SliderPage(BasePage):
         """
         self.page.evaluate(
             """(val) => {
-                const slider = document.querySelector('.range-slider input[type="range"]');
+                const slider = document.querySelector('input.range-slider');
                 slider.value = val;
                 slider.dispatchEvent(new Event('input', { bubbles: true }));
                 slider.dispatchEvent(new Event('change', { bubbles: true }));

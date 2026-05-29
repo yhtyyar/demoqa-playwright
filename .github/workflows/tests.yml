@@ -242,6 +242,7 @@ jobs:
   # ─────────────────────────────────────────────
   # Job 6: Деплой Allure Report на GitHub Pages
   # Запускается только на ветке main
+  # Использует Allure CLI напрямую — надёжнее сторонних экшенов
   # ─────────────────────────────────────────────
   deploy-allure-report:
     name: Deploy Allure Report
@@ -262,30 +263,59 @@ jobs:
           merge-multiple: true
         continue-on-error: true
 
+      # Проверяем наличие результатов перед генерацией
+      - name: Check allure results
+        id: check
+        run: |
+          if find allure-results -name "*.json" 2>/dev/null | grep -q .; then
+            echo "has_results=true" >> $GITHUB_OUTPUT
+            echo "✅ Allure result files found"
+          else
+            echo "has_results=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No allure result files — skipping deploy"
+          fi
+
+      # Берём историю из gh-pages для trend-графиков
       - name: Get Allure history from gh-pages
+        if: steps.check.outputs.has_results == 'true'
         uses: actions/checkout@v4
-        if: always()
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
 
-      - name: Generate Allure Report with history
-        uses: simple-elf/allure-report-action@master
-        if: always()
+      # Копируем историю в results для отображения тренда
+      - name: Restore Allure history
+        if: steps.check.outputs.has_results == 'true'
+        run: cp -r gh-pages/history allure-results/history 2>/dev/null || true
+
+      # Устанавливаем Java (Allure CLI требует JRE 8+)
+      - name: Setup Java
+        if: steps.check.outputs.has_results == 'true'
+        uses: actions/setup-java@v4
         with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          allure_history: allure-history
-          keep_reports: 30
+          distribution: temurin
+          java-version: "17"
+
+      # Устанавливаем Allure CLI напрямую — без зависимости от сторонних экшенов
+      - name: Install Allure CLI
+        if: steps.check.outputs.has_results == 'true'
+        run: |
+          wget -q https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz -O allure.tgz
+          tar -xzf allure.tgz
+          sudo mv allure-2.27.0 /opt/allure-cli
+          echo "/opt/allure-cli/bin" >> $GITHUB_PATH
+
+      - name: Generate Allure Report
+        if: steps.check.outputs.has_results == 'true'
+        run: allure generate allure-results --clean -o allure-report
 
       - name: Deploy to GitHub Pages
+        if: steps.check.outputs.has_results == 'true'
         uses: peaceiris/actions-gh-pages@v4
-        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: allure-report
           force_orphan: true
           commit_message: "docs: update Allure report [skip ci]"

@@ -74,18 +74,23 @@ class AccordionPage(BasePage):
     def is_section_open(self, section_number: int) -> bool:
         """Проверить, открыта ли секция.
 
+        Bootstrap добавляет класс 'show' к открытому контенту (.collapse.show).
+        Проверяем атрибут class — надёжнее, чем is_visible(), которая ждёт 15 сек
+        и неправильно интерпретирует overflow:hidden на Bootstrap collapse.
+
         Args:
             section_number: Номер секции (1, 2 или 3).
 
         Returns:
-            True если секция раскрыта.
+            True если Bootstrap-класс 'show' присутствует в атрибуте class.
         """
-        contents = {
-            1: self.section1_content,
-            2: self.section2_content,
-            3: self.section3_content,
+        selectors = {
+            1: self.SECTION1_CONTENT,
+            2: self.SECTION2_CONTENT,
+            3: self.SECTION3_CONTENT,
         }
-        return self.is_visible(contents[section_number])
+        classes = self.page.locator(selectors[section_number]).get_attribute("class") or ""
+        return "show" in classes.split()
 
     def get_section_text(self, section_number: int) -> str:
         """Получить текст содержимого секции.
