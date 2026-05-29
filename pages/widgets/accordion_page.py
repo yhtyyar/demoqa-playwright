@@ -8,31 +8,11 @@ from pages.base_page import BasePage
 class AccordionPage(BasePage):
     """Page Object для страницы https://demoqa.com/accordian.
 
-    DemoQA использует Bootstrap 4 collapse. Способы определения открытой секции
-    по убыванию надёжности:
-      1. .collapse.show count() — МГНОВЕННО, не ждёт DOM-элементы  ← используем
-      2. aria-expanded на кнопке — зависит от Bootstrap JS (может быть не выставлен)
-      3. is_visible() — ждёт до timeout, неправильно для overflow:hidden
+    DemoQA accordion — внешний сайт, разметка может меняться.
+    Вместо CSS-классов или aria-атрибутов используем getBoundingClientRect():
+    высота card-body > 0 = секция открыта, высота == 0 = закрыта.
+    Это работает для любой реализации (Bootstrap 4/5, кастомный JS).
     """
-
-    # Заголовки — для клика используем card-header целиком (надёжнее, чем конкретная кнопка)
-    SECTION1_HEADER = ".card:nth-child(1) .card-header"
-    SECTION2_HEADER = ".card:nth-child(2) .card-header"
-    SECTION3_HEADER = ".card:nth-child(3) .card-header"
-
-    # Открытая секция = .collapse.show внутри карточки (Bootstrap-стандарт)
-    SECTION1_OPEN = ".card:nth-child(1) .collapse.show"
-    SECTION2_OPEN = ".card:nth-child(2) .collapse.show"
-    SECTION3_OPEN = ".card:nth-child(3) .collapse.show"
-
-    # Текст из card-body (доступен всегда, даже когда collapse скрыт через display:none)
-    SECTION1_BODY = ".card:nth-child(1) .card-body"
-    SECTION2_BODY = ".card:nth-child(2) .card-body"
-    SECTION3_BODY = ".card:nth-child(3) .card-body"
-
-    _HEADER_MAP = {1: "SECTION1_HEADER", 2: "SECTION2_HEADER", 3: "SECTION3_HEADER"}
-    _OPEN_MAP = {1: "SECTION1_OPEN", 2: "SECTION2_OPEN", 3: "SECTION3_OPEN"}
-    _BODY_MAP = {1: "SECTION1_BODY", 2: "SECTION2_BODY", 3: "SECTION3_BODY"}
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -42,8 +22,37 @@ class AccordionPage(BasePage):
         super().open("/accordian")
         return self
 
+    def is_section_open(self, section_number: int) -> bool:
+        """Проверить открытость секции через высоту card-body.
+
+        getBoundingClientRect().height > 0 надёжнее CSS-классов и aria-атрибутов:
+        работает при display:none (height=0), overflow:hidden и любом JS-фреймворке.
+
+        Args:
+            section_number: Номер секции (1, 2 или 3).
+
+        Returns:
+            True если card-body секции имеет высоту > 0 (видима пользователю).
+        """
+        return bool(
+            self.page.evaluate(
+                """(n) => {
+                    const cards = document.querySelectorAll('.card');
+                    if (!cards || cards.length < n) return false;
+                    const card = cards[n - 1];
+                    const body = card.querySelector('.card-body');
+                    if (!body) return false;
+                    return body.getBoundingClientRect().height > 0;
+                }""",
+                section_number,
+            )
+        )
+
     def click_section(self, section_number: int) -> "AccordionPage":
-        """Кликнуть по заголовку секции для раскрытия/сворачивания.
+        """Кликнуть по триггеру секции для раскрытия/сворачивания.
+
+        Ищет элемент с data-toggle/data-bs-toggle (Bootstrap 4/5),
+        затем любую кнопку, затем сам card-header.
 
         Args:
             section_number: Номер секции (1, 2 или 3).
@@ -51,28 +60,25 @@ class AccordionPage(BasePage):
         Returns:
             Экземпляр AccordionPage для chaining.
         """
-        selector = getattr(self, self._HEADER_MAP[section_number])
-        self.click(self.page.locator(selector))
-        self.page.wait_for_timeout(500)
+        self.page.evaluate(
+            """(n) => {
+                const cards = document.querySelectorAll('.card');
+                if (!cards || cards.length < n) return;
+                const card = cards[n - 1];
+                const trigger =
+                    card.querySelector('[data-toggle="collapse"]') ||
+                    card.querySelector('[data-bs-toggle="collapse"]') ||
+                    card.querySelector('.card-header button') ||
+                    card.querySelector('.card-header');
+                if (trigger) trigger.click();
+            }""",
+            section_number,
+        )
+        self.page.wait_for_timeout(600)
         return self
 
-    def is_section_open(self, section_number: int) -> bool:
-        """Проверить, открыта ли секция через count() на .collapse.show.
-
-        Bootstrap добавляет класс 'show' к открытому .collapse.
-        count() возвращает результат мгновенно — не ждёт появления элемента.
-
-        Args:
-            section_number: Номер секции (1, 2 или 3).
-
-        Returns:
-            True если .collapse.show присутствует внутри карточки секции.
-        """
-        selector = getattr(self, self._OPEN_MAP[section_number])
-        return self.page.locator(selector).count() > 0
-
     def ensure_section_open(self, section_number: int) -> "AccordionPage":
-        """Гарантировать, что секция открыта. Кликнуть если закрыта.
+        """Гарантировать открытость секции. Кликнуть если закрыта.
 
         Args:
             section_number: Номер секции (1, 2 или 3).
@@ -91,10 +97,18 @@ class AccordionPage(BasePage):
             section_number: Номер секции (1, 2 или 3).
 
         Returns:
-            Текст card-body секции.
+            Текст card-body секции или пустая строка.
         """
-        selector = getattr(self, self._BODY_MAP[section_number])
         try:
-            return self.page.locator(selector).text_content(timeout=5000) or ""
+            text = self.page.evaluate(
+                """(n) => {
+                    const cards = document.querySelectorAll('.card');
+                    if (!cards || cards.length < n) return '';
+                    const body = cards[n - 1].querySelector('.card-body');
+                    return body ? body.innerText : '';
+                }""",
+                section_number,
+            )
+            return str(text) if text else ""
         except Exception:
             return ""
