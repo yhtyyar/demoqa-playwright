@@ -8,10 +8,10 @@ from pages.base_page import BasePage
 class AccordionPage(BasePage):
     """Page Object для страницы https://demoqa.com/accordian.
 
-    DemoQA accordion — внешний сайт, разметка может меняться.
-    Вместо CSS-классов или aria-атрибутов используем getBoundingClientRect():
-    высота card-body > 0 = секция открыта, высота == 0 = закрыта.
-    Это работает для любой реализации (Bootstrap 4/5, кастомный JS).
+    Ключевое открытие: DemoQA НЕ использует Bootstrap .card классы.
+    Единственные стабильные точки входа — heading IDs:
+      #section1Heading, #section2Heading, #section3Heading
+    Состояние открытости проверяем через nextElementSibling + getBoundingClientRect.
     """
 
     def __init__(self, page: Page) -> None:
@@ -22,37 +22,8 @@ class AccordionPage(BasePage):
         super().open("/accordian")
         return self
 
-    def is_section_open(self, section_number: int) -> bool:
-        """Проверить открытость секции через высоту card-body.
-
-        getBoundingClientRect().height > 0 надёжнее CSS-классов и aria-атрибутов:
-        работает при display:none (height=0), overflow:hidden и любом JS-фреймворке.
-
-        Args:
-            section_number: Номер секции (1, 2 или 3).
-
-        Returns:
-            True если card-body секции имеет высоту > 0 (видима пользователю).
-        """
-        return bool(
-            self.page.evaluate(
-                """(n) => {
-                    const cards = document.querySelectorAll('.card');
-                    if (!cards || cards.length < n) return false;
-                    const card = cards[n - 1];
-                    const body = card.querySelector('.card-body');
-                    if (!body) return false;
-                    return body.getBoundingClientRect().height > 0;
-                }""",
-                section_number,
-            )
-        )
-
     def click_section(self, section_number: int) -> "AccordionPage":
-        """Кликнуть по триггеру секции для раскрытия/сворачивания.
-
-        Ищет элемент с data-toggle/data-bs-toggle (Bootstrap 4/5),
-        затем любую кнопку, затем сам card-header.
+        """Кликнуть по триггеру секции через heading ID.
 
         Args:
             section_number: Номер секции (1, 2 или 3).
@@ -62,20 +33,45 @@ class AccordionPage(BasePage):
         """
         self.page.evaluate(
             """(n) => {
-                const cards = document.querySelectorAll('.card');
-                if (!cards || cards.length < n) return;
-                const card = cards[n - 1];
+                const heading = document.getElementById('section' + n + 'Heading');
+                if (!heading) return;
                 const trigger =
-                    card.querySelector('[data-toggle="collapse"]') ||
-                    card.querySelector('[data-bs-toggle="collapse"]') ||
-                    card.querySelector('.card-header button') ||
-                    card.querySelector('.card-header');
-                if (trigger) trigger.click();
+                    heading.querySelector('[data-toggle="collapse"]') ||
+                    heading.querySelector('[data-bs-toggle="collapse"]') ||
+                    heading.querySelector('button') ||
+                    heading;
+                trigger.click();
             }""",
             section_number,
         )
         self.page.wait_for_timeout(600)
         return self
+
+    def is_section_open(self, section_number: int) -> bool:
+        """Проверить открытость секции через nextElementSibling heading'а.
+
+        Находим #sectionNHeading (гарантированно есть в DOM),
+        берём следующий sibling-элемент (контент секции),
+        проверяем высоту через getBoundingClientRect.
+
+        Args:
+            section_number: Номер секции (1, 2 или 3).
+
+        Returns:
+            True если контент секции имеет высоту > 0.
+        """
+        return bool(
+            self.page.evaluate(
+                """(n) => {
+                    const heading = document.getElementById('section' + n + 'Heading');
+                    if (!heading) return false;
+                    const content = heading.nextElementSibling;
+                    if (!content) return false;
+                    return content.getBoundingClientRect().height > 0;
+                }""",
+                section_number,
+            )
+        )
 
     def ensure_section_open(self, section_number: int) -> "AccordionPage":
         """Гарантировать открытость секции. Кликнуть если закрыта.
@@ -97,18 +93,29 @@ class AccordionPage(BasePage):
             section_number: Номер секции (1, 2 или 3).
 
         Returns:
-            Текст card-body секции или пустая строка.
+            innerText содержимого секции.
         """
         try:
             text = self.page.evaluate(
                 """(n) => {
-                    const cards = document.querySelectorAll('.card');
-                    if (!cards || cards.length < n) return '';
-                    const body = cards[n - 1].querySelector('.card-body');
-                    return body ? body.innerText : '';
+                    const heading = document.getElementById('section' + n + 'Heading');
+                    if (!heading) return '';
+                    const content = heading.nextElementSibling;
+                    return content ? (content.innerText || '') : '';
                 }""",
                 section_number,
             )
-            return str(text) if text else ""
+            return str(text).strip() if text else ""
         except Exception:
             return ""
+
+    def heading_exists(self, section_number: int) -> bool:
+        """Проверить наличие heading'а секции в DOM.
+
+        Args:
+            section_number: Номер секции (1, 2 или 3).
+
+        Returns:
+            True если #sectionNHeading найден.
+        """
+        return self.page.locator(f"#section{section_number}Heading").count() > 0

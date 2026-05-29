@@ -2,9 +2,9 @@
 
 Covers: Accordian, Date Picker, Slider.
 
-Стратегия для accordion: DemoQA — внешний сайт, начальное состояние нестабильно.
-  smoke   → только загрузка страницы (всегда проходит)
-  regression → функциональность открытия/закрытия (через ensure_section_open)
+Accordion: DemoQA не использует Bootstrap .card — только #sectionNHeading IDs.
+  smoke   → page.locator("#section1Heading").count() > 0  (всегда проходит)
+  regression → функциональность через ensure_section_open()
 """
 
 import pytest
@@ -20,12 +20,13 @@ class TestAccordion:
 
     @pytest.mark.smoke
     def test_accordion_page_loads(self, page: Page) -> None:
-        """TC-W01: Страница аккордеона загружается и содержит секции."""
-        AccordionPage(page).open()
+        """TC-W01: Страница аккордеона загружается и headings присутствуют."""
+        accordion = AccordionPage(page).open()
 
-        # Проверяем только что страница загрузилась с секциями — не трогаем состояние
-        card_count = page.locator(".card").count()
-        assert card_count >= 3, f"Ожидалось 3+ секции, найдено: {card_count}"
+        # #section1Heading гарантированно есть в DOM DemoQA accordion
+        assert accordion.heading_exists(1), "#section1Heading не найден на странице"
+        assert accordion.heading_exists(2), "#section2Heading не найден на странице"
+        assert accordion.heading_exists(3), "#section3Heading не найден на странице"
 
     @pytest.mark.regression
     def test_section1_can_be_opened(self, page: Page) -> None:
@@ -41,7 +42,6 @@ class TestAccordion:
         """TC-W03: Вторая секция открывается по клику."""
         accordion = AccordionPage(page).open()
 
-        # Закрываем 2 если открыта, затем открываем — гарантируем состояние
         if accordion.is_section_open(2):
             accordion.click_section(2)
         accordion.click_section(2)
@@ -67,7 +67,7 @@ class TestAccordion:
         accordion.ensure_section_open(1)
         text = accordion.get_section_text(1)
 
-        assert len(text.strip()) > 20, f"Текст первой секции слишком короткий: '{text[:50]}'"
+        assert len(text) > 20, f"Текст первой секции слишком короткий: '{text[:50]}'"
 
     @pytest.mark.regression
     def test_open_section_can_be_closed(self, page: Page) -> None:
@@ -79,7 +79,7 @@ class TestAccordion:
 
         accordion.click_section(1)
 
-        assert not accordion.is_section_open(1), "Секция 1 не закрылась после клика"
+        assert not accordion.is_section_open(1), "Секция 1 не закрылась"
 
 
 class TestDatePicker:
@@ -101,25 +101,21 @@ class TestDatePicker:
         date_picker.set_date("05/15/2025")
 
         value = date_picker.get_date_value()
-        assert "05/15/2025" in value, f"Ожидаемая дата '05/15/2025' не установлена. Текущее значение: '{value}'"
+        assert "05/15/2025" in value, f"Дата не установлена. Текущее: '{value}'"
 
     @pytest.mark.regression
     def test_date_field_has_default_value(self, page: Page) -> None:
-        """Поле даты имеет значение по умолчанию при открытии страницы."""
+        """Поле даты имеет значение по умолчанию при открытии."""
         date_picker = DatePickerPage(page).open()
 
-        value = date_picker.get_date_value()
-
-        assert value != "", "Поле даты пустое при открытии страницы"
+        assert date_picker.get_date_value() != "", "Поле даты пустое"
 
     @pytest.mark.ui
     def test_datetime_field_has_default_value(self, page: Page) -> None:
-        """Поле Date+Time имеет значение по умолчанию при открытии страницы."""
+        """Поле Date+Time имеет значение по умолчанию при открытии."""
         date_picker = DatePickerPage(page).open()
 
-        value = date_picker.get_datetime_value()
-
-        assert value != "", "Поле Date+Time пустое при открытии страницы"
+        assert date_picker.get_datetime_value() != "", "Поле Date+Time пустое"
 
 
 class TestSlider:
@@ -134,12 +130,12 @@ class TestSlider:
 
     @pytest.mark.regression
     def test_set_slider_to_value(self, page: Page) -> None:
-        """TC-S02: Установить значение ползунка и проверить индикатор."""
+        """TC-S02: Установить значение ползунка."""
         slider = SliderPage(page).open()
 
         slider.set_value(75)
 
-        assert slider.get_value() == 75, f"Ожидалось значение 75, получено: {slider.get_value()}"
+        assert slider.get_value() == 75, f"Ожидалось 75, получено: {slider.get_value()}"
 
     @pytest.mark.regression
     def test_slider_min_value(self, page: Page) -> None:
@@ -161,9 +157,9 @@ class TestSlider:
 
     @pytest.mark.regression
     def test_slider_has_default_value(self, page: Page) -> None:
-        """Ползунок имеет значение по умолчанию при открытии страницы."""
+        """Ползунок имеет значение в диапазоне [0, 100] по умолчанию."""
         slider = SliderPage(page).open()
 
         value = slider.get_value()
 
-        assert 0 <= value <= 100, f"Значение по умолчанию {value} вне диапазона [0, 100]"
+        assert 0 <= value <= 100, f"Значение {value} вне диапазона [0, 100]"
