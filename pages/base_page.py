@@ -208,11 +208,13 @@ class BasePage:
         Returns:
             Экземпляр текущего Page Object для chaining.
         """
-        self.page.evaluate("""() => {
+        self.page.evaluate(
+            """() => {
                 const ads = document.querySelectorAll(
                     '#fixedban, #adplus-anchor, iframe[id^="google_ads"], .fixedban'
                 );
                 ads.forEach(ad => ad.remove());
                 document.querySelector('footer')?.remove();
-            }""")
+            }"""
+        )
         return self

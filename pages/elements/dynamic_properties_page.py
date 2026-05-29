@@ -67,10 +67,12 @@ class DynamicPropertiesPage(BasePage):
         Returns:
             CSS-цвет кнопки в формате 'rgb(...)'.
         """
-        return self.page.evaluate("""() => {
+        return self.page.evaluate(
+            """() => {
                 const btn = document.querySelector('#colorChange');
                 return window.getComputedStyle(btn).color;
-            }""")
+            }"""
+        )
 
     def wait_for_visible_button(self) -> "DynamicPropertiesPage":
         """Ждать появления кнопки visibleAfter (до 7 секунд).

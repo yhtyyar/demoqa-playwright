@@ -1,3 +1,6 @@
 [tool.black]
 line-length = 120
 target-version = ["py311"]
+# Prevent black from reformatting multiline strings inside function calls.
+# Without this, black 24.3.0 and newer versions disagree on evaluate("""...""") style.
+skip-magic-trailing-comma = false

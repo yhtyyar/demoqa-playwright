@@ -21,13 +21,15 @@ class TestPracticeForm:
         )
 
         # Удалить рекламные баннеры
-        page.evaluate("""() => {
+        page.evaluate(
+            """() => {
                 const ads = document.querySelectorAll(
                     '#fixedban, .ad, #adplus-anchor, iframe[id^="google_ads"]'
                 );
                 ads.forEach(ad => ad.remove());
                 document.querySelector('footer')?.remove();
-            }""")
+            }"""
+        )
 
         # Act — заполнить основные поля
         page.locator("#firstName").fill(data["first_name"])
@@ -80,13 +82,15 @@ class TestPracticeForm:
             f"{Settings.BASE_URL}/automation-practice-form",
             wait_until="domcontentloaded",
         )
-        page.evaluate("""() => {
+        page.evaluate(
+            """() => {
                 const ads = document.querySelectorAll(
                     '#fixedban, .ad, #adplus-anchor, iframe[id^="google_ads"]'
                 );
                 ads.forEach(ad => ad.remove());
                 document.querySelector('footer')?.remove();
-            }""")
+            }"""
+        )
 
         # Act
         page.locator("#submit").scroll_into_view_if_needed()
@@ -120,13 +124,15 @@ class TestPracticeForm:
             f"{Settings.BASE_URL}/automation-practice-form",
             wait_until="domcontentloaded",
         )
-        page.evaluate("""() => {
+        page.evaluate(
+            """() => {
                 const ads = document.querySelectorAll(
                     '#fixedban, .ad, #adplus-anchor, iframe[id^="google_ads"]'
                 );
                 ads.forEach(ad => ad.remove());
                 document.querySelector('footer')?.remove();
-            }""")
+            }"""
+        )
 
         # Act
         page.locator("#firstName").fill(data["first_name"])

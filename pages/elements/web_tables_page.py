@@ -131,7 +131,8 @@ class WebTablesPage(BasePage):
         Returns:
             Список словарей с данными строк.
         """
-        return self.page.evaluate("""() => {
+        return self.page.evaluate(
+            """() => {
             const rows = document.querySelectorAll('tbody tr');
             const data = [];
             rows.forEach(row => {
@@ -151,7 +152,8 @@ class WebTablesPage(BasePage):
                 }
             });
             return data;
-        }""")
+        }"""
+        )
 
     def find_row_by_email(self, email: str) -> Optional[int]:
         """Найти индекс строки по email.
