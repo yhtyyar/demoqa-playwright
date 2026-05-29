@@ -1,11 +1,10 @@
 """Тесты для секции Widgets.
 
 Covers: Accordian, Date Picker, Slider.
-Демонстрирует работу с интерактивными UI-компонентами:
-Bootstrap accordion, react-datepicker, range input.
 
-Примечание по accordion: DemoQA — внешний сайт, начальное состояние секций
-может меняться. Тесты используют ensure_section_open() для надёжности.
+Стратегия для accordion: DemoQA — внешний сайт, начальное состояние нестабильно.
+  smoke   → только загрузка страницы (всегда проходит)
+  regression → функциональность открытия/закрытия (через ensure_section_open)
 """
 
 import pytest
@@ -20,30 +19,38 @@ class TestAccordion:
     """Тесты для страницы Accordian."""
 
     @pytest.mark.smoke
-    def test_accordion_section1_opens(self, page: Page) -> None:
-        """TC-W01: Первая секция аккордеона открывается."""
+    def test_accordion_page_loads(self, page: Page) -> None:
+        """TC-W01: Страница аккордеона загружается и содержит секции."""
+        AccordionPage(page).open()
+
+        # Проверяем только что страница загрузилась с секциями — не трогаем состояние
+        card_count = page.locator(".card").count()
+        assert card_count >= 3, f"Ожидалось 3+ секции, найдено: {card_count}"
+
+    @pytest.mark.regression
+    def test_section1_can_be_opened(self, page: Page) -> None:
+        """TC-W02: Первая секция открывается по клику."""
         accordion = AccordionPage(page).open()
 
-        # Открываем секцию 1 (или убеждаемся что уже открыта)
         accordion.ensure_section_open(1)
 
         assert accordion.is_section_open(1), "Секция 1 не открылась"
 
     @pytest.mark.regression
-    def test_click_section2_opens_it(self, page: Page) -> None:
-        """TC-W02: Клик по второй секции открывает её."""
+    def test_section2_can_be_opened(self, page: Page) -> None:
+        """TC-W03: Вторая секция открывается по клику."""
         accordion = AccordionPage(page).open()
 
-        # Закрываем секцию 2 если открыта, потом открываем — проверяем смену состояния
+        # Закрываем 2 если открыта, затем открываем — гарантируем состояние
         if accordion.is_section_open(2):
-            accordion.click_section(2)  # закрыть
-        accordion.click_section(2)  # открыть
+            accordion.click_section(2)
+        accordion.click_section(2)
 
         assert accordion.is_section_open(2), "Секция 2 не открылась"
 
     @pytest.mark.regression
-    def test_click_section3_opens_it(self, page: Page) -> None:
-        """TC-W03: Клик по третьей секции открывает её."""
+    def test_section3_can_be_opened(self, page: Page) -> None:
+        """TC-W04: Третья секция открывается по клику."""
         accordion = AccordionPage(page).open()
 
         if accordion.is_section_open(3):
@@ -54,27 +61,25 @@ class TestAccordion:
 
     @pytest.mark.regression
     def test_section1_content_has_text(self, page: Page) -> None:
-        """Первая секция содержит непустой текст."""
+        """Открытая секция 1 содержит непустой текст."""
         accordion = AccordionPage(page).open()
 
         accordion.ensure_section_open(1)
         text = accordion.get_section_text(1)
 
-        assert len(text.strip()) > 20, f"Текст первой секции слишком короткий: '{text}'"
+        assert len(text.strip()) > 20, f"Текст первой секции слишком короткий: '{text[:50]}'"
 
     @pytest.mark.regression
-    def test_toggle_section_closes_it(self, page: Page) -> None:
-        """Повторный клик по открытой секции закрывает её."""
+    def test_open_section_can_be_closed(self, page: Page) -> None:
+        """Открытая секция закрывается повторным кликом."""
         accordion = AccordionPage(page).open()
 
-        # Убедимся, что секция 1 открыта
         accordion.ensure_section_open(1)
-        assert accordion.is_section_open(1), "Не удалось открыть секцию 1"
+        assert accordion.is_section_open(1), "ensure_section_open не открыл секцию 1"
 
-        # Закрываем
         accordion.click_section(1)
 
-        assert not accordion.is_section_open(1), "Секция 1 должна была закрыться"
+        assert not accordion.is_section_open(1), "Секция 1 не закрылась после клика"
 
 
 class TestDatePicker:
