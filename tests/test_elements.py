@@ -301,3 +301,64 @@ class TestWebTables:
         rows = table.get_all_rows_data()
         assert len(rows) >= 3, \
             f"Ожидалось минимум 3 записи, найдено: {len(rows)}"
+
+    @pytest.mark.regression
+    def test_delete_record(self, page: Page) -> None:
+        """TC-WT04: Удаление записи из таблицы уменьшает количество строк."""
+        # Arrange
+        table = WebTablesPage(page).open()
+        initial_count = table.get_row_count()
+        assert initial_count > 0, "Нет записей для удаления"
+
+        # Act — удаляем первую строку
+        table.delete_row_by_index(0)
+        table.page.wait_for_timeout(500)
+
+        # Assert
+        new_count = table.get_row_count()
+        assert new_count == initial_count - 1, \
+            f"Ожидалось {initial_count - 1} строк, найдено: {new_count}"
+
+    @pytest.mark.regression
+    def test_edit_existing_record(self, page: Page) -> None:
+        """TC-WT05: Редактирование существующей записи через кнопку Edit."""
+        # Arrange
+        table = WebTablesPage(page).open()
+
+        # Act — открыть форму редактирования первой строки
+        table.page.locator("tbody tr:nth-child(1) [title='Edit']").click()
+        form_visible = table.page.locator("#registration-form-modal").is_visible()
+
+        # Assert
+        assert form_visible, "Форма редактирования не открылась"
+
+        # Изменить salary
+        salary_field = table.page.locator("#salary")
+        salary_field.triple_click()
+        salary_field.fill("99999")
+        table.page.locator("#submit").click()
+        table.page.wait_for_timeout(500)
+
+        rows = table.get_all_rows_data()
+        assert any(row["salary"] == "99999" for row in rows), \
+            "Изменённое значение salary не сохранилось в таблице"
+
+    @pytest.mark.regression
+    def test_search_clears_result(self, page: Page) -> None:
+        """Очистка поля поиска восстанавливает все записи."""
+        # Arrange
+        table = WebTablesPage(page).open()
+        initial_count = table.get_row_count()
+
+        # Act — поиск по несуществующему значению
+        table.search("XXXXXXXXXX_NOTEXIST")
+        assert table.get_row_count() == 0, "Поиск должен был вернуть 0 результатов"
+
+        # Очистить поиск
+        table.search("")
+        table.page.wait_for_timeout(500)
+
+        # Assert
+        restored_count = table.get_row_count()
+        assert restored_count == initial_count, \
+            f"После очистки поиска ожидалось {initial_count} строк, найдено: {restored_count}"
