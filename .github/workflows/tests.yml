@@ -49,7 +49,7 @@ jobs:
         run: flake8 config pages tests utils conftest.py main.py
 
       - name: Check formatting with black
-        run: black --check --diff config pages tests utils conftest.py main.py
+        run: black --check --diff .
 
   # ─────────────────────────────────────────────
   # Job 2: Сборка Docker-образа
@@ -287,4 +287,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
-          force_orphan: false
+          force_orphan: true
+          commit_message: "docs: update Allure report [skip ci]"

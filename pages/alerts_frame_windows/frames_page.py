@@ -1,6 +1,6 @@
 """Страницы Frames и Nested Frames — работа с iframe."""
 
-from playwright.sync_api import Frame, Locator, Page
+from playwright.sync_api import Frame, Page
 
 from pages.base_page import BasePage
 
@@ -30,11 +30,7 @@ class FramesPage(BasePage):
         Returns:
             Текст #sampleHeading внутри frame1.
         """
-        return (
-            self.page.frame_locator(self.FRAME1)
-            .locator(self.HEADING_IN_FRAME)
-            .text_content() or ""
-        )
+        return self.page.frame_locator(self.FRAME1).locator(self.HEADING_IN_FRAME).text_content() or ""
 
     def get_frame2_text(self) -> str:
         """Получить текст заголовка из второго фрейма.
@@ -42,11 +38,7 @@ class FramesPage(BasePage):
         Returns:
             Текст #sampleHeading внутри frame2.
         """
-        return (
-            self.page.frame_locator(self.FRAME2)
-            .locator(self.HEADING_IN_FRAME)
-            .text_content() or ""
-        )
+        return self.page.frame_locator(self.FRAME2).locator(self.HEADING_IN_FRAME).text_content() or ""
 
     def get_frame_by_id(self, frame_id: str) -> Frame:
         """Получить объект Frame по id атрибуту.
@@ -95,8 +87,6 @@ class NestedFramesPage(BasePage):
             Текстовое содержимое body в child frame внутри parent frame.
         """
         locator = (
-            self.page.frame_locator(self.PARENT_FRAME)
-            .frame_locator(self.CHILD_FRAME)
-            .locator(self.PARENT_BODY_TEXT)
+            self.page.frame_locator(self.PARENT_FRAME).frame_locator(self.CHILD_FRAME).locator(self.PARENT_BODY_TEXT)
         )
         return locator.text_content() or ""

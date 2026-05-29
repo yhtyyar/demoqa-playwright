@@ -33,7 +33,8 @@ class CheckBoxPage(BasePage):
         """Открыть страницу CheckBox."""
         super().open("/checkbox")
         self.page.locator(self.TREE).wait_for(
-            state="visible", timeout=Settings.EXPECT_TIMEOUT,
+            state="visible",
+            timeout=Settings.EXPECT_TIMEOUT,
         )
         return self
 
@@ -55,9 +56,7 @@ class CheckBoxPage(BasePage):
         Returns:
             Локатор label-элемента.
         """
-        return self.page.locator(
-            f".rc-tree-title:text-is('{item_name}')"
-        ).first
+        return self.page.locator(f".rc-tree-title:text-is('{item_name}')").first
 
     def get_toggle_icon(self, item_name: str) -> Locator:
         """Получить иконку раскрытия/сворачивания для узла дерева.
@@ -69,8 +68,7 @@ class CheckBoxPage(BasePage):
             Локатор иконки toggle.
         """
         return self.page.locator(
-            f".rc-tree-treenode:has(.rc-tree-title:text-is('{item_name}'))"
-            f" >> .rc-tree-switcher"
+            f".rc-tree-treenode:has(.rc-tree-title:text-is('{item_name}'))" f" >> .rc-tree-switcher"
         )
 
     # --- Действия ---
@@ -119,8 +117,7 @@ class CheckBoxPage(BasePage):
             Экземпляр CheckBoxPage для chaining.
         """
         checkbox = self.page.locator(
-            f".rc-tree-treenode:has(.rc-tree-title:text-is('{item_name}'))"
-            f" >> .rc-tree-checkbox"
+            f".rc-tree-treenode:has(.rc-tree-title:text-is('{item_name}'))" f" >> .rc-tree-checkbox"
         )
         checkbox.click(force=True, timeout=Settings.ACTION_TIMEOUT)
         return self

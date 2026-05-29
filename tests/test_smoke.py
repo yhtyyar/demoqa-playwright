@@ -4,7 +4,6 @@ import pytest
 from playwright.sync_api import Page
 
 from config.settings import Settings
-from config.test_data import TestData
 from pages.elements.buttons_page import ButtonsPage
 from pages.elements.radio_button_page import RadioButtonPage
 from pages.elements.text_box_page import TextBoxPage
@@ -20,15 +19,14 @@ class TestSmoke:
         response = page.goto(Settings.BASE_URL)
 
         # Assert — проверяем HTTP-статус, URL и наличие ключевых элементов
-        assert response is not None and response.ok, \
-            f"Главная страница вернула ошибку: {response.status if response else 'нет ответа'}"
-        assert "demoqa.com" in page.url, \
-            f"URL не содержит 'demoqa.com': {page.url}"
+        assert (
+            response is not None and response.ok
+        ), f"Главная страница вернула ошибку: {response.status if response else 'нет ответа'}"
+        assert "demoqa.com" in page.url, f"URL не содержит 'demoqa.com': {page.url}"
         # Ждём рендеринг карточек категорий (до 10 сек)
         cards = page.locator(".category-cards")
         cards.wait_for(state="visible", timeout=10000)
-        assert cards.is_visible(), \
-            "Карточки категорий не отображаются на главной странице"
+        assert cards.is_visible(), "Карточки категорий не отображаются на главной странице"
 
     @pytest.mark.smoke
     def test_textbox_basic_flow(self, page: Page) -> None:

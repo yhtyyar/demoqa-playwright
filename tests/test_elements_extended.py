@@ -24,8 +24,7 @@ class TestLinks:
 
         url = links.open_simple_link_in_new_tab()
 
-        assert "demoqa.com" in url, \
-            f"Новая вкладка открылась не на demoqa.com: '{url}'"
+        assert "demoqa.com" in url, f"Новая вкладка открылась не на demoqa.com: '{url}'"
 
     @pytest.mark.regression
     def test_api_link_created_returns_201(self, page: Page) -> None:
@@ -100,31 +99,25 @@ class TestUploadDownload:
             dest = os.path.join(tmp_dir, "downloaded.jpg")
             saved_path = upload_download.download_and_save(dest)
 
-            assert os.path.exists(saved_path), \
-                f"Скачанный файл не найден по пути: {saved_path}"
-            assert os.path.getsize(saved_path) > 0, \
-                "Скачанный файл пустой"
+            assert os.path.exists(saved_path), f"Скачанный файл не найден по пути: {saved_path}"
+            assert os.path.getsize(saved_path) > 0, "Скачанный файл пустой"
 
     @pytest.mark.smoke
     def test_upload_file_shows_result(self, page: Page) -> None:
         """TC-UD02: Загрузка файла — результат отображается с именем файла."""
         upload_download = UploadDownloadPage(page).open()
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".txt", prefix="test_upload_", delete=False
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".txt", prefix="test_upload_", delete=False) as tmp:
             tmp.write(b"playwright upload test")
             tmp_path = tmp.name
 
         try:
             upload_download.upload_file(tmp_path)
 
-            assert upload_download.is_upload_result_visible(), \
-                "Блок результата загрузки не отображается"
+            assert upload_download.is_upload_result_visible(), "Блок результата загрузки не отображается"
             filename = upload_download.get_uploaded_filename()
             expected_name = os.path.basename(tmp_path)
-            assert expected_name in filename, \
-                f"Ожидалось имя '{expected_name}' в результате, получено: '{filename}'"
+            assert expected_name in filename, f"Ожидалось имя '{expected_name}' в результате, получено: '{filename}'"
         finally:
             UploadDownloadPage.remove_file(tmp_path)
 
@@ -136,25 +129,23 @@ class TestUploadDownload:
         download = upload_download.download_file()
         filename = download.suggested_filename
 
-        assert any(filename.lower().endswith(ext) for ext in (".jpeg", ".jpg", ".png")), \
-            f"Неожиданное расширение скачанного файла: '{filename}'"
+        assert any(
+            filename.lower().endswith(ext) for ext in (".jpeg", ".jpg", ".png")
+        ), f"Неожиданное расширение скачанного файла: '{filename}'"
 
     @pytest.mark.regression
     def test_upload_different_file_types(self, page: Page) -> None:
         """Загрузка файла с расширением .csv — принимается формой."""
         upload_download = UploadDownloadPage(page).open()
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".csv", prefix="test_csv_", delete=False
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".csv", prefix="test_csv_", delete=False) as tmp:
             tmp.write(b"id,name,email\n1,John,john@test.com")
             tmp_path = tmp.name
 
         try:
             upload_download.upload_file(tmp_path)
 
-            assert upload_download.is_upload_result_visible(), \
-                "CSV файл не принят формой загрузки"
+            assert upload_download.is_upload_result_visible(), "CSV файл не принят формой загрузки"
         finally:
             UploadDownloadPage.remove_file(tmp_path)
 
@@ -171,8 +162,7 @@ class TestDynamicProperties:
         """TC-D01: Кнопка 'Will enable 5 seconds' изначально неактивна."""
         dynamic = DynamicPropertiesPage(page).open()
 
-        assert not dynamic.is_enable_button_enabled(), \
-            "Кнопка должна быть disabled при открытии страницы"
+        assert not dynamic.is_enable_button_enabled(), "Кнопка должна быть disabled при открытии страницы"
 
     @pytest.mark.regression
     @pytest.mark.slow
@@ -182,16 +172,16 @@ class TestDynamicProperties:
 
         dynamic.wait_for_button_enabled()
 
-        assert dynamic.is_enable_button_enabled(), \
-            "Кнопка не активировалась за отведённое время"
+        assert dynamic.is_enable_button_enabled(), "Кнопка не активировалась за отведённое время"
 
     @pytest.mark.regression
     def test_visible_button_not_present_initially(self, page: Page) -> None:
         """TC-D03: Кнопка 'Visible After 5 Seconds' изначально отсутствует в DOM."""
         dynamic = DynamicPropertiesPage(page).open()
 
-        assert not dynamic.is_visible_after_button_present(), \
-            "Кнопка visibleAfter присутствует в DOM сразу, ожидалось — нет"
+        assert (
+            not dynamic.is_visible_after_button_present()
+        ), "Кнопка visibleAfter присутствует в DOM сразу, ожидалось — нет"
 
     @pytest.mark.regression
     @pytest.mark.slow
@@ -201,13 +191,11 @@ class TestDynamicProperties:
 
         dynamic.wait_for_visible_button()
 
-        assert dynamic.is_visible_after_button_present(), \
-            "Кнопка visibleAfter не появилась за отведённое время"
+        assert dynamic.is_visible_after_button_present(), "Кнопка visibleAfter не появилась за отведённое время"
 
     @pytest.mark.regression
     def test_color_change_button_is_present(self, page: Page) -> None:
         """Кнопка colorChange присутствует на странице с момента загрузки."""
         dynamic = DynamicPropertiesPage(page).open()
 
-        assert dynamic.is_visible(dynamic.color_change_button), \
-            "Кнопка colorChange не видна при загрузке страницы"
+        assert dynamic.is_visible(dynamic.color_change_button), "Кнопка colorChange не видна при загрузке страницы"

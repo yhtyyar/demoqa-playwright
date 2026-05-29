@@ -21,15 +21,13 @@ class TestPracticeForm:
         )
 
         # Удалить рекламные баннеры
-        page.evaluate(
-            """() => {
+        page.evaluate("""() => {
                 const ads = document.querySelectorAll(
                     '#fixedban, .ad, #adplus-anchor, iframe[id^="google_ads"]'
                 );
                 ads.forEach(ad => ad.remove());
                 document.querySelector('footer')?.remove();
-            }"""
-        )
+            }""")
 
         # Act — заполнить основные поля
         page.locator("#firstName").fill(data["first_name"])
@@ -54,12 +52,9 @@ class TestPracticeForm:
         modal.wait_for(state="visible", timeout=10000)
 
         modal_text = modal.text_content() or ""
-        assert data["first_name"] in modal_text, \
-            f"Имя '{data['first_name']}' не найдено в модальном окне"
-        assert data["last_name"] in modal_text, \
-            f"Фамилия '{data['last_name']}' не найдена в модальном окне"
-        assert data["email"] in modal_text, \
-            f"Email '{data['email']}' не найден в модальном окне"
+        assert data["first_name"] in modal_text, f"Имя '{data['first_name']}' не найдено в модальном окне"
+        assert data["last_name"] in modal_text, f"Фамилия '{data['last_name']}' не найдена в модальном окне"
+        assert data["email"] in modal_text, f"Email '{data['email']}' не найден в модальном окне"
 
     @pytest.mark.ui
     def test_form_fields_visible(self, page: Page) -> None:
@@ -85,15 +80,13 @@ class TestPracticeForm:
             f"{Settings.BASE_URL}/automation-practice-form",
             wait_until="domcontentloaded",
         )
-        page.evaluate(
-            """() => {
+        page.evaluate("""() => {
                 const ads = document.querySelectorAll(
                     '#fixedban, .ad, #adplus-anchor, iframe[id^="google_ads"]'
                 );
                 ads.forEach(ad => ad.remove());
                 document.querySelector('footer')?.remove();
-            }"""
-        )
+            }""")
 
         # Act
         page.locator("#submit").scroll_into_view_if_needed()
@@ -102,8 +95,7 @@ class TestPracticeForm:
         # Assert — форма не отправляется без обязательных полей
         modal = page.locator(".modal-content")
         is_modal_visible = modal.is_visible()
-        assert not is_modal_visible, \
-            "Форма принята без обязательных полей (First Name, Last Name, Mobile)"
+        assert not is_modal_visible, "Форма принята без обязательных полей (First Name, Last Name, Mobile)"
 
     @pytest.mark.regression
     def test_gender_radio_buttons_present(self, page: Page) -> None:
@@ -128,15 +120,13 @@ class TestPracticeForm:
             f"{Settings.BASE_URL}/automation-practice-form",
             wait_until="domcontentloaded",
         )
-        page.evaluate(
-            """() => {
+        page.evaluate("""() => {
                 const ads = document.querySelectorAll(
                     '#fixedban, .ad, #adplus-anchor, iframe[id^="google_ads"]'
                 );
                 ads.forEach(ad => ad.remove());
                 document.querySelector('footer')?.remove();
-            }"""
-        )
+            }""")
 
         # Act
         page.locator("#firstName").fill(data["first_name"])
@@ -152,7 +142,5 @@ class TestPracticeForm:
         modal = page.locator(".modal-content")
         modal.wait_for(state="visible", timeout=10000)
         modal_text = modal.text_content() or ""
-        assert data["first_name"] in modal_text, \
-            f"Имя '{data['first_name']}' не найдено в модальном окне"
-        assert "Female" in modal_text, \
-            "Выбранный пол 'Female' не отображается в результате"
+        assert data["first_name"] in modal_text, f"Имя '{data['first_name']}' не найдено в модальном окне"
+        assert "Female" in modal_text, "Выбранный пол 'Female' не отображается в результате"

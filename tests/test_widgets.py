@@ -21,8 +21,7 @@ class TestAccordion:
         """TC-W01: Первая секция открыта по умолчанию."""
         accordion = AccordionPage(page).open()
 
-        assert accordion.is_section_open(1), \
-            "Первая секция должна быть открыта по умолчанию"
+        assert accordion.is_section_open(1), "Первая секция должна быть открыта по умолчанию"
 
     @pytest.mark.regression
     def test_click_section2_opens_it(self, page: Page) -> None:
@@ -49,8 +48,7 @@ class TestAccordion:
 
         text = accordion.get_section_text(1)
 
-        assert len(text.strip()) > 20, \
-            f"Текст первой секции слишком короткий: '{text}'"
+        assert len(text.strip()) > 20, f"Текст первой секции слишком короткий: '{text}'"
 
     @pytest.mark.regression
     def test_click_open_section_closes_it(self, page: Page) -> None:
@@ -60,8 +58,7 @@ class TestAccordion:
         assert accordion.is_section_open(1)
         accordion.click_section(1)
 
-        assert not accordion.is_section_open(1), \
-            "Первая секция должна была закрыться после повторного клика"
+        assert not accordion.is_section_open(1), "Первая секция должна была закрыться после повторного клика"
 
 
 class TestDatePicker:
@@ -72,10 +69,8 @@ class TestDatePicker:
         """TC-DP01: Поле выбора даты присутствует на странице."""
         date_picker = DatePickerPage(page).open()
 
-        assert date_picker.is_visible(date_picker.date_input), \
-            "Поле Date Input не отображается"
-        assert date_picker.is_visible(date_picker.datetime_input), \
-            "Поле Date+Time Input не отображается"
+        assert date_picker.is_visible(date_picker.date_input), "Поле Date Input не отображается"
+        assert date_picker.is_visible(date_picker.datetime_input), "Поле Date+Time Input не отображается"
 
     @pytest.mark.regression
     def test_set_date_value(self, page: Page) -> None:
@@ -85,8 +80,7 @@ class TestDatePicker:
         date_picker.set_date("05/15/2025")
 
         value = date_picker.get_date_value()
-        assert "05/15/2025" in value, \
-            f"Ожидаемая дата '05/15/2025' не установлена. Текущее значение: '{value}'"
+        assert "05/15/2025" in value, f"Ожидаемая дата '05/15/2025' не установлена. Текущее значение: '{value}'"
 
     @pytest.mark.regression
     def test_date_field_has_default_value(self, page: Page) -> None:
@@ -124,8 +118,7 @@ class TestSlider:
 
         slider.set_value(75)
 
-        assert slider.get_value() == 75, \
-            f"Ожидалось значение 75, получено: {slider.get_value()}"
+        assert slider.get_value() == 75, f"Ожидалось значение 75, получено: {slider.get_value()}"
 
     @pytest.mark.regression
     def test_slider_min_value(self, page: Page) -> None:
@@ -134,8 +127,7 @@ class TestSlider:
 
         slider.set_value(0)
 
-        assert slider.get_value() == 0, \
-            f"Ожидалось 0, получено: {slider.get_value()}"
+        assert slider.get_value() == 0, f"Ожидалось 0, получено: {slider.get_value()}"
 
     @pytest.mark.regression
     def test_slider_max_value(self, page: Page) -> None:
@@ -144,8 +136,7 @@ class TestSlider:
 
         slider.set_value(100)
 
-        assert slider.get_value() == 100, \
-            f"Ожидалось 100, получено: {slider.get_value()}"
+        assert slider.get_value() == 100, f"Ожидалось 100, получено: {slider.get_value()}"
 
     @pytest.mark.regression
     def test_slider_has_default_value(self, page: Page) -> None:
@@ -154,5 +145,4 @@ class TestSlider:
 
         value = slider.get_value()
 
-        assert 0 <= value <= 100, \
-            f"Значение по умолчанию {value} вне диапазона [0, 100]"
+        assert 0 <= value <= 100, f"Значение по умолчанию {value} вне диапазона [0, 100]"

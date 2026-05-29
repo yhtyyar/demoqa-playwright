@@ -27,8 +27,7 @@ class TestAlerts:
         message = alerts.accept_alert_and_get_message()
 
         assert message != "", "Alert не вернул сообщение"
-        assert "alert" in message.lower() or len(message) > 0, \
-            f"Неожиданное сообщение alert: '{message}'"
+        assert "alert" in message.lower() or len(message) > 0, f"Неожиданное сообщение alert: '{message}'"
 
     @pytest.mark.regression
     def test_confirm_dialog_accepted(self, page: Page) -> None:
@@ -59,8 +58,7 @@ class TestAlerts:
         alerts.fill_prompt_and_accept(test_text)
 
         result = alerts.get_prompt_result()
-        assert test_text in result, \
-            f"Введённый текст '{test_text}' не найден в результате: '{result}'"
+        assert test_text in result, f"Введённый текст '{test_text}' не найден в результате: '{result}'"
 
     @pytest.mark.regression
     @pytest.mark.slow
@@ -83,8 +81,7 @@ class TestBrowserWindows:
 
         text = browser_windows.open_new_tab_and_get_text()
 
-        assert "This is a sample page" in text, \
-            f"Неожиданный текст на новой вкладке: '{text}'"
+        assert "This is a sample page" in text, f"Неожиданный текст на новой вкладке: '{text}'"
 
     @pytest.mark.regression
     def test_new_window_opens_with_correct_content(self, page: Page) -> None:
@@ -93,8 +90,7 @@ class TestBrowserWindows:
 
         text = browser_windows.open_new_window_and_get_text()
 
-        assert "This is a sample page" in text, \
-            f"Неожиданный текст в новом окне: '{text}'"
+        assert "This is a sample page" in text, f"Неожиданный текст в новом окне: '{text}'"
 
     @pytest.mark.regression
     def test_original_page_stays_active_after_new_tab(self, page: Page) -> None:
@@ -103,8 +99,7 @@ class TestBrowserWindows:
 
         browser_windows.open_new_tab_and_get_text()
 
-        assert "browser-windows" in page.url, \
-            "URL исходной страницы изменился после открытия новой вкладки"
+        assert "browser-windows" in page.url, "URL исходной страницы изменился после открытия новой вкладки"
 
 
 class TestFrames:
@@ -117,8 +112,7 @@ class TestFrames:
 
         text = frames.get_frame1_text()
 
-        assert "This is a sample page" in text, \
-            f"Неожиданный текст в frame1: '{text}'"
+        assert "This is a sample page" in text, f"Неожиданный текст в frame1: '{text}'"
 
     @pytest.mark.regression
     def test_frame2_has_correct_text(self, page: Page) -> None:
@@ -127,8 +121,7 @@ class TestFrames:
 
         text = frames.get_frame2_text()
 
-        assert "This is a sample page" in text, \
-            f"Неожиданный текст в frame2: '{text}'"
+        assert "This is a sample page" in text, f"Неожиданный текст в frame2: '{text}'"
 
     @pytest.mark.regression
     def test_both_frames_load_independently(self, page: Page) -> None:
@@ -140,8 +133,7 @@ class TestFrames:
 
         assert text1 != "", "Frame1 пустой"
         assert text2 != "", "Frame2 пустой"
-        assert text1 == text2, \
-            f"Ожидался одинаковый контент в обоих фреймах: '{text1}' vs '{text2}'"
+        assert text1 == text2, f"Ожидался одинаковый контент в обоих фреймах: '{text1}' vs '{text2}'"
 
 
 class TestNestedFrames:
@@ -154,8 +146,7 @@ class TestNestedFrames:
 
         text = nested.get_parent_frame_text()
 
-        assert "Parent frame" in text, \
-            f"Текст 'Parent frame' не найден в родительском фрейме: '{text}'"
+        assert "Parent frame" in text, f"Текст 'Parent frame' не найден в родительском фрейме: '{text}'"
 
     @pytest.mark.regression
     def test_child_frame_has_content(self, page: Page) -> None:
@@ -164,8 +155,7 @@ class TestNestedFrames:
 
         text = nested.get_child_frame_text()
 
-        assert "Child Iframe" in text, \
-            f"Текст 'Child Iframe' не найден в дочернем фрейме: '{text}'"
+        assert "Child Iframe" in text, f"Текст 'Child Iframe' не найден в дочернем фрейме: '{text}'"
 
 
 class TestModalDialogs:
@@ -207,5 +197,4 @@ class TestModalDialogs:
         modal.open_small_modal()
 
         body = modal.get_modal_body_text()
-        assert "small modal" in body.lower(), \
-            f"Неожиданный контент тела: '{body}'"
+        assert "small modal" in body.lower(), f"Неожиданный контент тела: '{body}'"

@@ -99,6 +99,7 @@ class AlertsPage(BasePage):
         Returns:
             Экземпляр AlertsPage для chaining.
         """
+
         def handle_dialog(dialog):
             if accept:
                 dialog.accept()
@@ -119,6 +120,7 @@ class AlertsPage(BasePage):
         Returns:
             Экземпляр AlertsPage для chaining.
         """
+
         def handle_dialog(dialog):
             dialog.accept(text)
 

@@ -60,7 +60,9 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0) -> Callable:
                     if attempt < max_retries - 1:
                         time.sleep(delay * (attempt + 1))
             raise last_exception
+
         return wrapper
+
     return decorator
 
 

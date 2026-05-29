@@ -23,9 +23,7 @@ class TestData:
         "email": fake.email(),
         "age": str(fake.random_int(min=18, max=65)),
         "salary": str(fake.random_int(min=1000, max=10000)),
-        "department": fake.random_element(
-            ["Engineering", "Sales", "Marketing", "HR"]
-        ),
+        "department": fake.random_element(["Engineering", "Sales", "Marketing", "HR"]),
     }
 
     # Practice Form

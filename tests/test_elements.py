@@ -31,10 +31,8 @@ class TestTextBox:
 
         # Assert
         assert text_box.is_output_visible(), "Блок результата не отображается"
-        assert data["full_name"] in text_box.get_output_name(), \
-            f"Имя '{data['full_name']}' не найдено в результате"
-        assert data["email"] in text_box.get_output_email(), \
-            f"Email '{data['email']}' не найден в результате"
+        assert data["full_name"] in text_box.get_output_name(), f"Имя '{data['full_name']}' не найдено в результате"
+        assert data["email"] in text_box.get_output_email(), f"Email '{data['email']}' не найден в результате"
 
     @pytest.mark.regression
     def test_submit_with_empty_fields(self, page: Page) -> None:
@@ -46,8 +44,7 @@ class TestTextBox:
         text_box.submit()
 
         # Assert
-        assert not text_box.is_output_visible(), \
-            "Блок результата появился при отправке пустой формы"
+        assert not text_box.is_output_visible(), "Блок результата появился при отправке пустой формы"
 
     @pytest.mark.regression
     def test_submit_with_invalid_email(self, page: Page) -> None:
@@ -125,13 +122,13 @@ class TestCheckBox:
 
         # Act & Assert — развернуть
         check_box.expand_all()
-        assert check_box.is_visible(check_box.get_checkbox_label("Notes")), \
-            "Элемент 'Notes' не виден после Expand All"
+        assert check_box.is_visible(check_box.get_checkbox_label("Notes")), "Элемент 'Notes' не виден после Expand All"
 
         # Act & Assert — свернуть
         check_box.collapse_all()
-        assert not check_box.is_visible(check_box.get_checkbox_label("Notes")), \
-            "Элемент 'Notes' всё ещё виден после Collapse All"
+        assert not check_box.is_visible(
+            check_box.get_checkbox_label("Notes")
+        ), "Элемент 'Notes' всё ещё виден после Collapse All"
 
 
 class TestRadioButton:
@@ -198,8 +195,7 @@ class TestButtons:
 
         # Assert
         message = buttons.get_click_message()
-        assert "dynamic click" in message.lower(), \
-            f"Неверное сообщение после клика: '{message}'"
+        assert "dynamic click" in message.lower(), f"Неверное сообщение после клика: '{message}'"
 
     @pytest.mark.smoke
     def test_double_click(self, page: Page) -> None:
@@ -212,8 +208,7 @@ class TestButtons:
 
         # Assert
         message = buttons.get_double_click_message()
-        assert "double click" in message.lower(), \
-            f"Неверное сообщение после двойного клика: '{message}'"
+        assert "double click" in message.lower(), f"Неверное сообщение после двойного клика: '{message}'"
 
     @pytest.mark.regression
     def test_right_click(self, page: Page) -> None:
@@ -226,8 +221,7 @@ class TestButtons:
 
         # Assert
         message = buttons.get_right_click_message()
-        assert "right click" in message.lower(), \
-            f"Неверное сообщение после правого клика: '{message}'"
+        assert "right click" in message.lower(), f"Неверное сообщение после правого клика: '{message}'"
 
     @pytest.mark.regression
     def test_all_buttons_respond(self, page: Page) -> None:
@@ -271,10 +265,8 @@ class TestWebTables:
         ).submit_form()
 
         # Assert
-        assert table.is_record_exists(data["email"]), \
-            f"Запись с email '{data['email']}' не найдена в таблице"
-        assert table.get_row_count() == initial_count + 1, \
-            "Количество строк не увеличилось на 1"
+        assert table.is_record_exists(data["email"]), f"Запись с email '{data['email']}' не найдена в таблице"
+        assert table.get_row_count() == initial_count + 1, "Количество строк не увеличилось на 1"
 
     @pytest.mark.regression
     def test_search_record(self, page: Page) -> None:
@@ -288,8 +280,7 @@ class TestWebTables:
         # Assert
         rows = table.get_all_rows_data()
         assert len(rows) >= 1, "Поиск не вернул результатов"
-        assert any("Cierra" in row["first_name"] for row in rows), \
-            "Запись 'Cierra' не найдена в результатах поиска"
+        assert any("Cierra" in row["first_name"] for row in rows), "Запись 'Cierra' не найдена в результатах поиска"
 
     @pytest.mark.ui
     def test_table_has_default_records(self, page: Page) -> None:
@@ -299,8 +290,7 @@ class TestWebTables:
 
         # Assert
         rows = table.get_all_rows_data()
-        assert len(rows) >= 3, \
-            f"Ожидалось минимум 3 записи, найдено: {len(rows)}"
+        assert len(rows) >= 3, f"Ожидалось минимум 3 записи, найдено: {len(rows)}"
 
     @pytest.mark.regression
     def test_delete_record(self, page: Page) -> None:
@@ -316,8 +306,7 @@ class TestWebTables:
 
         # Assert
         new_count = table.get_row_count()
-        assert new_count == initial_count - 1, \
-            f"Ожидалось {initial_count - 1} строк, найдено: {new_count}"
+        assert new_count == initial_count - 1, f"Ожидалось {initial_count - 1} строк, найдено: {new_count}"
 
     @pytest.mark.regression
     def test_edit_existing_record(self, page: Page) -> None:
@@ -340,8 +329,7 @@ class TestWebTables:
         table.page.wait_for_timeout(500)
 
         rows = table.get_all_rows_data()
-        assert any(row["salary"] == "99999" for row in rows), \
-            "Изменённое значение salary не сохранилось в таблице"
+        assert any(row["salary"] == "99999" for row in rows), "Изменённое значение salary не сохранилось в таблице"
 
     @pytest.mark.regression
     def test_search_clears_result(self, page: Page) -> None:
@@ -360,5 +348,6 @@ class TestWebTables:
 
         # Assert
         restored_count = table.get_row_count()
-        assert restored_count == initial_count, \
-            f"После очистки поиска ожидалось {initial_count} строк, найдено: {restored_count}"
+        assert (
+            restored_count == initial_count
+        ), f"После очистки поиска ожидалось {initial_count} строк, найдено: {restored_count}"

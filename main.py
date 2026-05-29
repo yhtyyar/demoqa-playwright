@@ -20,7 +20,9 @@ def run_tests(
         Код завершения процесса.
     """
     cmd = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         "tests/",
         "-v",
     ]
@@ -29,10 +31,12 @@ def run_tests(
         cmd.extend(["-m", markers])
 
     if report:
-        cmd.extend([
-            "--html=reports/html/report.html",
-            "--self-contained-html",
-        ])
+        cmd.extend(
+            [
+                "--html=reports/html/report.html",
+                "--self-contained-html",
+            ]
+        )
 
     env_vars = {}
     if headless:
