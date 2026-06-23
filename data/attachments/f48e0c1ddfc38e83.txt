@@ -1,0 +1,2 @@
+INFO     demoqa_tests:conftest.py:39 Запуск браузера: engine=firefox, channel=default, headless=True
+INFO     demoqa_tests:base_page.py:32 Открытие страницы: https://demoqa.com/alerts

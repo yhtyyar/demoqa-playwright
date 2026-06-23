@@ -1,0 +1,1 @@
+INFO     demoqa_tests:base_page.py:32 Открытие страницы: https://demoqa.com/radio-button
